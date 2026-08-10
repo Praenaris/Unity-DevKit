@@ -1,7 +1,7 @@
 {
-	"name": "com.dragonresonance.devkit",
-	"version": "3.12.3",
-	"displayName": "Dragon Resonance DevKit",
+	"name": "com.praenaris.devkit",
+	"version": "4.0.0",
+	"displayName": "Praenaris DevKit",
 	"description": "",
 	"unity": "6000.0",
 	"license": "Apache-2.0",
@@ -10,7 +10,7 @@
 		"scripting"
 	],
 	"author": {
-		"name": "Dragon Resonance",
-		"url": "https://devkit.dragonresonance.com/"
+		"name": "Praenaris",
+		"url": "https://www.praenaris.com/"
 	}
 }

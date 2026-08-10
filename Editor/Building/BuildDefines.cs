@@ -7,6 +7,7 @@ using System.Linq;
 using System;
 using UnityEditor.Build;
 using UnityEditor;
+using UnityEngine;
 
 
 namespace DragonResonance.Editor.Building
@@ -26,22 +27,28 @@ namespace DragonResonance.Editor.Building
 
 		#region Publics
 
-			public static void ToggleBuildDefinition(string definition) =>
-				SetupBuildDefinition(FormatToggledDefinition(definition.Trim()), true);
+			public static void ToggleBuildDefinition(string definition)
+			{
+				bool containsDefinition = BuildDefines.CurrentDefinitions.Contains(definition);
+				SetupBuildDefinition((containsDefinition ? FormatToggledDefinition(definition) : definition), true);
+			}
 
 			public static void SetupBuildDefinition(string definition, bool overrideState)
 			{
-				definition = definition.Trim();
-				if (string.IsNullOrEmpty(definition)) return;
-
+				Debug.Log($"definition:{definition}, overrideState:{overrideState}");
 				HashSet<string> definitions = new(BuildDefines.CurrentDefinitions);
 				{
 					string toggledDefinition = FormatToggledDefinition(definition);
-					if (overrideState)
+					if (!overrideState) {
+						if (!definitions.Contains(toggledDefinition))
+							definitions.AddOrIgnore(definition);
+					}
+					else {
 						definitions.Remove(toggledDefinition);
-					if (!definitions.Contains(toggledDefinition))
 						definitions.AddOrIgnore(definition);
+					}
 				}
+				Debug.Log(string.Join(", ", definitions));
 				ApplyDefinitions(definitions);
 			}
 
@@ -55,9 +62,14 @@ namespace DragonResonance.Editor.Building
 
 			private static void ApplyDefinitions(IEnumerable<string> definitions)
 			{
+				string[] cleanedDefinitions = definitions
+					.Select(definition => definition?.Trim())
+					.Where(definition => !string.IsNullOrEmpty(definition) && !string.IsNullOrEmpty(definition.Trim('_')))
+					.ToArray();
+
 				PlayerSettings.SetScriptingDefineSymbols(
 					NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup),
-					definitions.ToArray());
+					cleanedDefinitions);
 			}
 
 		#endregion
