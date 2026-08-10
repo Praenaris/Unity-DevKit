@@ -1,6 +1,6 @@
 {
-    "name": "DragonResonance.DevKit",
-    "rootNamespace": "DragonResonance",
+    "name": "Praenaris.DevKit",
+    "rootNamespace": "Praenaris",
     "references": [
         "Unity.InputSystem",
         "Unity.Netcode.Runtime",
