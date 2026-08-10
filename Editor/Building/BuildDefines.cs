@@ -35,7 +35,7 @@ namespace DragonResonance.Editor.Building
 
 			public static void SetupBuildDefinition(string definition, bool overrideState)
 			{
-				Debug.Log($"definition:{definition}, overrideState:{overrideState}");
+				//Debug.Log($"definition:{definition}, overrideState:{overrideState}");
 				HashSet<string> definitions = new(BuildDefines.CurrentDefinitions);
 				{
 					string toggledDefinition = FormatToggledDefinition(definition);
@@ -48,7 +48,7 @@ namespace DragonResonance.Editor.Building
 						definitions.AddOrIgnore(definition);
 					}
 				}
-				Debug.Log(string.Join(", ", definitions));
+				//Debug.Log(string.Join(", ", definitions));
 				ApplyDefinitions(definitions);
 			}
 
