@@ -1,6 +1,7 @@
 using DragonResonance.Attributes;
 using DragonResonance.Behaviours;
 using DragonResonance.Extensions;
+using UnityEngine.Events;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
 
@@ -12,11 +13,16 @@ namespace DragonResonance.Miscellany
 		[SerializeField] protected int _slideIndex = 0;
 		[SerializeField] protected bool _cyclical = true;
 
+		[Header("Autoplay")]
 		[SerializeField] private bool _autoplay = false;
 		[ShowIf(nameof(_autoplay))] [SerializeField] private float _autoplayInterval = 4f;
 		[ShowIf(nameof(_autoplay))] [SerializeField] private float _autoplayInitialDelay = 0f;
 
 		[SerializeField] protected T[] _slides = { };
+
+		[SerializeField] protected UnityEvent OnFirstSlideReached;
+		[SerializeField] protected UnityEvent OnLastSlideReached;
+		[SerializeField] protected UnityEvent OnAutoplayEnd;
 
 
 		private float _remaining = -1f;
@@ -27,17 +33,32 @@ namespace DragonResonance.Miscellany
 			#if UNITY_EDITOR
 			private void OnValidate()
 			{
-				GoTo(_slideIndex);
+				if (!Application.isPlaying) {
+					GoTo(_slideIndex);
+				}
 			}
 			#endif
 
-			private void Awake() => _remaining = _autoplayInitialDelay;
+			private void Start()
+			{
+				if (_autoplay) {
+					GoTo(-1);
+				}
+				_remaining = _autoplayInitialDelay;
+			}
 
 			private void Update()
 			{
 				if (_autoplay && ((_remaining -= Time.deltaTime) < 0f)) {
-					Next();
-					_remaining = _autoplayInterval;
+					if (!this.IsLastSlide) {
+						Next();
+						_remaining = _autoplayInterval;
+					}
+					else {
+						GoTo(-1);
+						OnAutoplayEnd?.Invoke();
+						this.enabled = false;
+					}
 				}
 			}
 
@@ -49,6 +70,8 @@ namespace DragonResonance.Miscellany
 			[ContextMenu(nameof(Previous))]
 			public void Previous()
 			{
+				if (_slides.IsEmpty()) return;	// Avoids a divide-by-zero in *Cyclic() below
+
 				if (_cyclical)
 					GoTo(_slideIndex.PreviousCyclic(_slides.Length));
 				else
@@ -58,6 +81,8 @@ namespace DragonResonance.Miscellany
 			[ContextMenu(nameof(Next))]
 			public void Next()
 			{
+				if (_slides.IsEmpty()) return;	// Avoids a divide-by-zero in *Cyclic() below
+
 				if (_cyclical)
 					GoTo(_slideIndex.NextCyclic(_slides.Length));
 				else
@@ -65,9 +90,14 @@ namespace DragonResonance.Miscellany
 			}
 
 
-			public virtual void GoTo(int index)
+			public void GoTo(int index)
 			{
+				int previousSlideIndex = _slideIndex;
 				UpdateSlide(_slideIndex = SanitizedIndex(index));
+				if (_slideIndex != previousSlideIndex) {
+					if (this.IsFirstSlide) OnFirstSlideReached?.Invoke();
+					if (this.IsLastSlide) OnLastSlideReached?.Invoke();
+				}
 			}
 
 		#endregion
@@ -75,7 +105,7 @@ namespace DragonResonance.Miscellany
 
 		#region Privates
 
-			protected int SanitizedIndex(int index) => _slides.IsEmpty() ? -1 : index.Clamp(0, (_slides.Length - 1));
+			protected int SanitizedIndex(int index) => _slides.IsEmpty() ? -1 : index.Clamp(-1, (_slides.Length - 1));
 
 			protected virtual void UpdateSlide(int currentIndex) { }
 
@@ -84,6 +114,7 @@ namespace DragonResonance.Miscellany
 
 		#region Properties
 
+			public int SlideIndex => _slideIndex;
 			public int FirstSlideIndex => 0;
 			public int LastSlideIndex => _slides.Length - 1;
 			public bool IsFirstSlide => (_slideIndex == this.FirstSlideIndex);
