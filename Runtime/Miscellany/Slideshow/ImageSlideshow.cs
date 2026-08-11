@@ -11,8 +11,10 @@ namespace DragonResonance.Miscellany
 
 		protected override void UpdateSlide(int currentIndex)
 		{
-			if (currentIndex.IsNegative()) return;
-			_image.sprite = base._slides[currentIndex];
+			if (currentIndex.IsNegative())	// An uninitialized slideshow starts at -1
+				_image.overrideSprite = null;
+			else
+				_image.overrideSprite = base._slides[currentIndex];
 		}
 	}
 }
