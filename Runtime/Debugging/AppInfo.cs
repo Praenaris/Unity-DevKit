@@ -1,4 +1,5 @@
 using DragonResonance.Behaviours;
+using DragonResonance.Miscellany;
 using System.Text;
 using UnityEngine.Events;
 using UnityEngine;
@@ -6,7 +7,7 @@ using UnityEngine;
 
 namespace DragonResonance.Debugging
 {
-	public class DeviceSpecs : PossumBehaviour
+	public class AppInfo : PossumBehaviour
 	{
 		[SerializeField] private UnityEvent<string> _targets = null;
 
@@ -34,22 +35,10 @@ namespace DragonResonance.Debugging
 			{
 				_toStringOutput.Clear();
 
-				_toStringOutput.AppendLine($"OSVersion:  {SystemInfo.operatingSystem}");
-				_toStringOutput.AppendLine($"DevType:    {SystemInfo.deviceType}");
-				_toStringOutput.AppendLine($"Monitor:    {Screen.currentResolution.ToString()}");
-				_toStringOutput.AppendLine();
-				_toStringOutput.AppendLine($"ViewRes:    {Screen.width} × {Screen.height}");
-				_toStringOutput.AppendLine($"Quality:    {QualitySettings.GetQualityLevel()} ({QualitySettings.names[QualitySettings.GetQualityLevel()]})");
-				_toStringOutput.AppendLine($"MaxTexSize: {SystemInfo.maxTextureSize}");
-				_toStringOutput.AppendLine($"MaxCmapSiz: {SystemInfo.maxCubemapSize}");
-				_toStringOutput.AppendLine();
-				_toStringOutput.AppendLine($"CPUModel:   {SystemInfo.processorType}");
-				_toStringOutput.AppendLine($"CPUCores:   {SystemInfo.processorCount} @ {SystemInfo.processorFrequency}");
-				_toStringOutput.AppendLine($"RAMSize:    {SystemInfo.systemMemorySize}");
-				_toStringOutput.AppendLine($"GPUModel:   {SystemInfo.graphicsDeviceVendor} {SystemInfo.graphicsDeviceName}");
-				_toStringOutput.AppendLine($"GPUVersion: {SystemInfo.graphicsDeviceVersion}");
-				_toStringOutput.AppendLine($"GPUMemSize: {SystemInfo.graphicsMemorySize}");
-				_toStringOutput.Append(    $"GPUShdrLvl: {SystemInfo.graphicsShaderLevel}");
+				_toStringOutput.AppendLine($"AppName:    {Application.productName}");
+				_toStringOutput.AppendLine($"ComName:    {Application.companyName}");
+				_toStringOutput.AppendLine($"ShortVer:   {Application.version}");
+				_toStringOutput.Append(    $"FullVer:    {Version.vFullVersionLower}");
 
 				return _toStringOutput.ToString();
 			}
