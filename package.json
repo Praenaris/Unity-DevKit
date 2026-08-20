@@ -1,16 +1,19 @@
 {
-	"name": "com.praenaris.devkit",
-	"version": "4.1.0",
-	"displayName": "Praenaris DevKit",
-	"description": "",
-	"unity": "6000.0",
-	"license": "Apache-2.0",
-	"dependencies": {},
-	"keywords": [
-		"scripting"
-	],
-	"author": {
-		"name": "Praenaris",
-		"url": "https://www.praenaris.com/"
-	}
+  "name": "com.praenaris.devkit",
+  "version": "4.2.0",
+  "displayName": "DevKit",
+  "unity": "6000.0",
+  "license": "Apache-2.0",
+  "keywords": [
+    "scripting"
+  ],
+  "author": {
+    "name": "Praenaris",
+    "url": "https://www.praenaris.com/",
+    "email": "contact@praenaris.com"
+  },
+  "hideInEditor": false,
+  "description": "A Unity extension package that enhances the development workflow with improved behaviours, extensions, utilities, useful constants, and other quality-of-life tools.",
+  "documentationUrl": "https://github.com/Praenaris/Unity-DevKit/blob/master/README.md",
+  "licensesUrl": "https://github.com/Praenaris/Unity-DevKit/blob/master/LICENSE.md"
 }
