@@ -63,7 +63,7 @@ namespace DragonResonance.GUI
 				if (!_playing || _sprites.Length.IsZero()) return;
 
 				int spriteIndex = this.CurrentSpriteIndex;
-				this.Image.sprite = _sprites[spriteIndex];
+				this.Image.overrideSprite = _sprites[spriteIndex];
 
 				if ((spriteIndex == _sprites.LastIndex()) && !_loop)
 					Stop();
