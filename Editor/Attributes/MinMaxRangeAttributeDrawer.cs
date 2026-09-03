@@ -24,9 +24,13 @@ namespace DragonResonance.Editor.Attributes
             SerializedProperty yRangeProperty = property.FindPropertyRelative(nameof(Vector2.y));
 
             int originalIndent = EditorGUI.indentLevel;
-            float minValue = rangeAttribute.RoundToInt ? Mathf.RoundToInt(xRangeProperty.floatValue) : xRangeProperty.floatValue;
-            float maxValue = rangeAttribute.RoundToInt ? Mathf.RoundToInt(yRangeProperty.floatValue) : yRangeProperty.floatValue;
             float fieldWidth = UnityEngine.GUI.skin.textField.CalcSize(new GUIContent(rangeAttribute.Max.ToString(CultureInfo.InvariantCulture))).x + HORIZONTAL_WIDTH;
+            bool isVector2Int = property.propertyType == SerializedPropertyType.Vector2Int;
+
+            float minValue = isVector2Int ? xRangeProperty.intValue :
+	            (rangeAttribute.RoundToInt ? Mathf.RoundToInt(xRangeProperty.floatValue) : xRangeProperty.floatValue);
+            float maxValue = isVector2Int ? yRangeProperty.intValue :
+	            (rangeAttribute.RoundToInt ? Mathf.RoundToInt(yRangeProperty.floatValue) : yRangeProperty.floatValue);
 
             label = EditorGUI.BeginProperty(position, label, property);
             {
@@ -36,14 +40,27 @@ namespace DragonResonance.Editor.Attributes
 	            Rect right = new(position.x + position.width - left.width, position.y, fieldWidth, position.height);
 
 	            EditorGUI.indentLevel = 0;
-	            minValue = Mathf.Clamp(EditorGUI.FloatField(left, GUIContent.none, minValue), rangeAttribute.Min, maxValue);
-	            maxValue = Mathf.Clamp(EditorGUI.FloatField(right, GUIContent.none, maxValue), minValue, rangeAttribute.Max);
 	            position.x += fieldWidth + HORIZONTAL_WIDTH;
 	            position.width -= (fieldWidth + HORIZONTAL_WIDTH) * 2;
 
+	            minValue = Mathf.Clamp(isVector2Int ?
+			            EditorGUI.IntField(left, GUIContent.none, (int)minValue) :
+			            EditorGUI.FloatField(left, GUIContent.none, minValue), rangeAttribute.Min, maxValue);
+	            maxValue = Mathf.Clamp(isVector2Int ?
+			            EditorGUI.IntField(right, GUIContent.none, (int)maxValue) :
+			            EditorGUI.FloatField(right, GUIContent.none, maxValue), minValue, rangeAttribute.Max);
+
 	            EditorGUI.MinMaxSlider(position, GUIContent.none, ref minValue, ref maxValue, rangeAttribute.Min, rangeAttribute.Max);
-	            xRangeProperty.floatValue = rangeAttribute.RoundToInt ? (float)Mathf.RoundToInt(minValue) : minValue;
-	            yRangeProperty.floatValue = rangeAttribute.RoundToInt ? (float)Mathf.RoundToInt(maxValue) : maxValue;
+
+	            if (isVector2Int) {
+		            xRangeProperty.intValue = Mathf.RoundToInt(minValue);
+		            yRangeProperty.intValue = Mathf.RoundToInt(maxValue);
+	            }
+	            else {
+		            xRangeProperty.floatValue = rangeAttribute.RoundToInt ? Mathf.RoundToInt(minValue) : minValue;
+		            yRangeProperty.floatValue = rangeAttribute.RoundToInt ? Mathf.RoundToInt(maxValue) : maxValue;
+	            }
+
 	            EditorGUI.indentLevel = originalIndent;
             }
             EditorGUI.EndProperty();
