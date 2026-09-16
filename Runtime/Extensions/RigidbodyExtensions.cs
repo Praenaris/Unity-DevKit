@@ -5,7 +5,15 @@ namespace Praenaris.Extensions
 {
 	public static class RigidbodyExtensions
 	{
-		#region Movement
+		#region Utility
+
+			public static Vector3 GetRelativeVector(this Rigidbody source, Vector3 relativeVector) =>
+				(source.rotation * relativeVector);
+
+		#endregion
+
+
+		#region State
 
 			public static void Translate(this Rigidbody source, Vector3 translation) =>
 				source.MovePosition(source.position + translation);
@@ -27,7 +35,28 @@ namespace Praenaris.Extensions
 		#endregion
 
 
-		#region Settings
+		#region Velocity
+
+			public static void SetRelativeVelocityX(this Rigidbody source, float targetSpeed) =>
+				source.SetRelativeVelocity(source.GetRelativeVector(Vector3.right), targetSpeed);
+
+			public static void SetRelativeVelocityY(this Rigidbody source, float targetSpeed) =>
+				source.SetRelativeVelocity(source.GetRelativeVector(Vector3.up), targetSpeed);
+
+			public static void SetRelativeVelocityZ(this Rigidbody source, float targetSpeed) =>
+				source.SetRelativeVelocity(source.GetRelativeVector(Vector3.forward), targetSpeed);
+
+			public static void SetRelativeVelocity(this Rigidbody source, Vector3 direction, float targetSpeed)
+			{
+				Vector3 axis = direction.normalized;
+				float currentSpeedAlongAxis = Vector3.Dot(source.linearVelocity, axis);
+				source.linearVelocity += axis * (targetSpeed - currentSpeedAlongAxis);
+			}
+
+		#endregion
+
+
+		#region Movement
 
 			public static void SetMovement(this Rigidbody source, Pose pose, Vector3 linearVelocity, Vector3 angularVelocity) =>
 				SetMovement(source, pose.position, pose.rotation, linearVelocity, angularVelocity);

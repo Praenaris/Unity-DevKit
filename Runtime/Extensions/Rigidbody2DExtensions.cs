@@ -5,10 +5,31 @@ namespace Praenaris.Extensions
 {
 	public static class Rigidbody2DExtensions
 	{
-		#region Movement
+		#region State
 
 			public static void Translate(this Rigidbody2D source, Vector2 translation) =>
 				source.MovePosition(source.position + translation);
+
+		#endregion
+
+
+		#region Movement
+
+			public static void SetRelativeVelocityX(this Rigidbody2D source, float targetSpeed) =>
+				source.SetRelativeVelocity(source.GetRelativeVector(Vector2.right), targetSpeed);
+
+			public static void SetRelativeVelocityY(this Rigidbody2D source, float targetSpeed) =>
+				source.SetRelativeVelocity(source.GetRelativeVector(Vector2.up), targetSpeed);
+
+			public static void SetRelativeVelocity(this Rigidbody2D source, Vector2 direction, float targetSpeed)
+			{
+				Vector2 axis = direction.normalized;
+				float currentSpeedAlongAxis = Vector2.Dot(source.linearVelocity, axis);
+				/*float deltaSpeed = targetSpeed - currentSpeedAlongAxis;
+				source.AddForce(axis * deltaSpeed * source.mass, ForceMode2D.Impulse);*/
+				source.linearVelocity += axis * (targetSpeed - currentSpeedAlongAxis);	// Better performance!
+			}
+
 
 		#endregion
 	}
