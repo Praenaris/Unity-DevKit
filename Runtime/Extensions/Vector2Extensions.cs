@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using System;
 using UnityEngine;
 
 
@@ -14,6 +16,18 @@ namespace DragonResonance.Extensions
 
 			public static float Lerp(this Vector2 vector, float t) => Mathf.Lerp(vector.x, vector.y, t);
 			public static float InverseLerp(this Vector2 vector, float value) => Mathf.InverseLerp(vector.x, vector.y, value);
+
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public static Vector2 Rotated(this Vector2 vector, float radians)
+			{
+				float sin = MathF.Sin(radians);
+				float cos = MathF.Cos(radians);
+				return new Vector2((vector.x * cos) - (vector.y * sin), (vector.x * sin) + (vector.y * cos));
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public static Vector2 RotatedDegrees(this Vector2 vector, float degrees) => vector.Rotated(degrees * Mathf.Deg2Rad);
 
 		#endregion
 
