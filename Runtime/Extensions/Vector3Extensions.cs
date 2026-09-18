@@ -35,6 +35,13 @@ namespace DragonResonance.Extensions
 			public static Vector3 ToVector3(this Vector3 vector) => new Vector3(vector.x, vector.y, vector.z);
 			public static Vector3Int ToVector3Int(this Vector3 vector) => new Vector3Int((int)vector.x, (int)vector.y, (int)vector.z);
 
+			public static Quaternion ToUpRotation(this Vector3 direction) =>
+				Quaternion.FromToRotation(Vector3.up, direction);
+			public static Quaternion ToRightRotation(this Vector3 direction) =>
+				Quaternion.FromToRotation(Vector3.right, direction);
+			public static Quaternion ToForwardRotation(this Vector3 direction) =>
+				Quaternion.FromToRotation(Vector3.forward, direction);
+
 		#endregion
 	}
 }

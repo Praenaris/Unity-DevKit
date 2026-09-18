@@ -37,10 +37,15 @@ namespace DragonResonance.Extensions
 
 		#region Casts
 
-			public static Vector2 ToVector2(this Vector2 vector) => new Vector2(vector.x, vector.y);
-			public static Vector2Int ToVector2Int(this Vector2 vector) => new Vector2Int((int)vector.x, (int)vector.y);
-			public static Vector3 ToVector3(this Vector2 vector) => new Vector3(vector.x, vector.y, 0f);
-			public static Vector3Int ToVector3Int(this Vector2 vector) => new Vector3Int((int)vector.x, (int)vector.y, 0);
+			public static Vector2 ToVector2(this Vector2 vector) => new(vector.x, vector.y);
+			public static Vector2Int ToVector2Int(this Vector2 vector) => new((int)vector.x, (int)vector.y);
+			public static Vector3 ToVector3(this Vector2 vector) => new(vector.x, vector.y, 0f);
+			public static Vector3Int ToVector3Int(this Vector2 vector) => new((int)vector.x, (int)vector.y, 0);
+
+			public static Quaternion ToUpRotation(this Vector2 direction) =>
+				Quaternion.LookRotation(Vector3.forward, direction);
+			public static Quaternion ToRightRotation(this Vector2 direction) =>
+				Quaternion.LookRotation(Vector3.forward, Vector2.Perpendicular(direction));
 
 		#endregion
 	}
