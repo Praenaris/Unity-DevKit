@@ -13,10 +13,19 @@ namespace DragonResonance.Editor.Attributes
 	{
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			if (property.propertyType != SerializedPropertyType.Integer)
+			if (property.propertyType != SerializedPropertyType.Integer) {
 				EditorGUI.HelpBox(position, $"{nameof(LayerAttribute)} works just on integers.", MessageType.Error);
-			else
-				property.intValue = EditorGUI.LayerField(position, label, property.intValue);
+				return;
+			}
+
+			label = EditorGUI.BeginProperty(position, label, property);
+
+			EditorGUI.BeginChangeCheck();
+			int newLayer = EditorGUI.LayerField(position, label, property.intValue);
+			if (EditorGUI.EndChangeCheck())
+				property.intValue = newLayer;
+
+			EditorGUI.EndProperty();
 		}
 	}
 }
