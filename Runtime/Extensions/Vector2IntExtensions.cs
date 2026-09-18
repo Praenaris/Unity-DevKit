@@ -5,7 +5,7 @@ namespace DragonResonance.Extensions
 {
 	public static class Vector2IntExtensions
 	{
-		#region Properties - Operations
+		#region Operations
 
 			public static Vector2Int SortedLow2High(this Vector2Int vector) => ((vector.x > vector.y) ? (new Vector2Int(vector.y, vector.x)) : vector);
 			public static Vector2Int SortedHigh2Low(this Vector2Int vector) => (vector.x < vector.y) ? (new Vector2Int(vector.y, vector.x)) : vector;
@@ -16,7 +16,7 @@ namespace DragonResonance.Extensions
 		#endregion
 
 
-		#region Properties - Search
+		#region Search
 
 			public static int Random(this Vector2Int vector) => UnityEngine.Random.Range(vector.x, vector.y);
 			public static int RandomInclusive(this Vector2Int vector) => UnityEngine.Random.Range(vector.x, (vector.y + 1));
@@ -25,14 +25,17 @@ namespace DragonResonance.Extensions
 		#endregion
 
 
-		#region Properties - Components
+		#region Components
 
 			public static float AverageOfTheTwo(this Vector2Int vector) => ((vector.x + vector.y) / 2f);
+
+			public static Vector2Int WithX(this Vector2Int vector, int x) => new(x, vector.y);
+			public static Vector2Int WithY(this Vector2Int vector, int y) => new(vector.x, y);
 
 		#endregion
 
 
-		#region Properties - Casts
+		#region Casts
 
 			public static Vector2 ToVector2(this Vector2Int vector) => new Vector2(vector.x, vector.y);
 			public static Vector2Int ToVector2Int(this Vector2Int vector) => new Vector2Int(vector.x, vector.y);
@@ -44,19 +47,15 @@ namespace DragonResonance.Extensions
 }
 
 
-/*       ________________________________________________________________       */
-/*           _________   _______ ________  _______  _______  ___    _           */
-/*           |        \ |______/ |______| |  _____ |       | |  \   |           */
-/*           |________/ |     \_ |      | |______| |_______| |   \__|           */
-/*           ______ _____ _____ _____ __   _ _____ __   _ _____ _____           */
-/*           |____/ |____ [___  |   | | \  | |___| | \  | |     |____           */
-/*           |    \ |____ ____] |___| |  \_| |   | |  \_| |____ |____           */
-/*       ________________________________________________________________       */
-/*                                                                              */
-/*           David Tabernero M.  <https://github.com/davidtabernerom>           */
-/*           Dragon Resonance    <https://github.com/dragonresonance>           */
-/*                  Copyright © 2021-2026. All rights reserved.                 */
-/*                Licensed under the Apache License, Version 2.0.               */
-/*                         See LICENSE.md for more info.                        */
-/*       ________________________________________________________________       */
-/*                                                                              */
+/*                                                                                                                */
+/*       `7MM"""Mq.`7MM"""Mq.       db     `7MM"""YMM  `7MN.   `7MF'     db     `7MM"""Mq. `7MMF' .M"""bgd        */
+/*         MM   `MM. MM   `MM.     ;MM:      MM    `7    MMN.    M      ;MM:      MM   `MM.  MM  ,MI    "Y        */
+/*         MM   ,M9  MM   ,M9     ,V^MM.     MM   d      M YMb   M     ,V^MM.     MM   ,M9   MM  `MMb.            */
+/*         MMmmdM9   MMmmdM9     ,M  `MM     MMmmMM      M  `MN. M    ,M  `MM     MMmmdM9    MM    `YMMNq.        */
+/*         MM        MM  YM.     AbmmmqMA    MM   Y  ,   M   `MM.M    AbmmmqMA    MM  YM.    MM  .     `MM        */
+/*         MM        MM   `Mb.  A'     VML   MM     ,M   M     YMM   A'     VML   MM   `Mb.  MM  Mb     dM        */
+/*       .JMML.    .JMML. .JMM.AMA.   .AMMA.JMMmmmmMMM .JML.    YM .AMA.   .AMMA.JMML. .JMM.JMML.P"Ybmmd"         */
+/*                                                                                                                */
+/*                 Licensed under the Apache License, Version 2.0.  See LICENSE.md for more info.                 */
+/*                                     Copyright © 2026. All rights reserved.                                     */
+/*                                                                                                                */
