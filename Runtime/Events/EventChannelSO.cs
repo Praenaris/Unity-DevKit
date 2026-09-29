@@ -4,14 +4,12 @@ using UnityEngine;
 
 namespace Praenaris.Events
 {
-	[CreateAssetMenu(menuName = "Praenaris/Event Channels/(Void) Event Channel")]
+	[CreateAssetMenu(menuName = "Praenaris/Event Channels/(void) Event Channel")]
 	public class EventChannelSO : ScriptableObject
 	{
-		public Action OnEventRaised;
-
+		public event Action OnEventRaised;
 		private void OnDisable() => OnEventRaised = null;
-
-		public void RaiseEvent() => OnEventRaised?.Invoke();
+		[ContextMenu(nameof(RaiseEvent))] public void RaiseEvent() => OnEventRaised?.Invoke();
 	}
 }
 

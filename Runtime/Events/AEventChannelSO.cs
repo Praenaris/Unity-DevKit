@@ -6,7 +6,7 @@ namespace Praenaris.Events
 {
 	public class AEventChannelSO<T> : ScriptableObject
 	{
-		public Action<T> OnEventRaised;
+		public event Action<T> OnEventRaised;
 
 		private void OnDisable() => OnEventRaised = null;
 

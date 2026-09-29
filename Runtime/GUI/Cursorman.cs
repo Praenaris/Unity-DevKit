@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Praenaris.GUI
 {
-	public class Cursorman : PossumBehaviour
+	public class Cursorman : SingletonPossumBehaviour<Cursorman>
 	{
 		[SerializeField] private Vector2 _hotspot = Vector2.zero;
 		[SerializeField] private Texture2D _normalTexture = null;
