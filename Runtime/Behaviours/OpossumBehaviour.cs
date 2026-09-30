@@ -13,28 +13,6 @@ namespace DragonResonance.Behaviours
 {
 	public abstract partial class OpossumBehaviour : NetworkBehaviour
 	{
-		#region Publics
-
-			public static void DestroyDynamically(GameObject gameObject)
-			{
-				#if UNITY_EDITOR
-					if (!Application.isPlaying)
-						DestroyImmediate(gameObject);
-					else
-				#endif
-						Destroy(gameObject);
-			}
-
-			public static void DestroyChildren(Transform container)
-			{
-				for (int childIndex = container.childCount - 1; childIndex >= 0; childIndex--) {
-					DestroyDynamically(container.GetChild(childIndex).gameObject);
-				}
-			}
-
-		#endregion
-
-
 		#region Privates
 
 			protected T GetComponentIfNull<T>(T statement) where T : Component =>
@@ -63,19 +41,6 @@ namespace DragonResonance.Behaviours
 			public IEnumerable<RectTransform> rectChildren => base.transform.GetRectChildren();
 
 		#endregion
-
-
-		#if UNITY_EDITOR
-
-			protected static T FindFirstAssetIfNull<T>(UnityObject statement) where T : UnityObject
-			{
-				if (statement != null) return (T)statement;
-				string[] guids = UnityEditor.AssetDatabase.FindAssets("t:" + typeof(T).Name);
-				if (guids.Length == 0) return null;
-				return UnityEditor.AssetDatabase.LoadAssetAtPath<T>(UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]));
-			}
-
-		#endif
 	}
 }
 
