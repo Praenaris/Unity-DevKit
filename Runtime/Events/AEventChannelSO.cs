@@ -6,11 +6,19 @@ namespace Praenaris.Events
 {
 	public class AEventChannelSO<T> : ScriptableObject
 	{
+		private T _latestValue = default;
+
 		public event Action<T> OnEventRaised;
 
-		private void OnDisable() => OnEventRaised = null;
+		private void OnDisable()
+		{
+			_latestValue = default;
+			OnEventRaised = null;
+		}
 
-		public void RaiseEvent(T data) => OnEventRaised?.Invoke(data);
+		public void RaiseEvent(T data) => OnEventRaised?.Invoke(_latestValue = data);
+
+		public T LatestValue => _latestValue;
 	}
 }
 
