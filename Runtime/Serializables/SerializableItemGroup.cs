@@ -1,7 +1,7 @@
 using System;
 
 
-namespace DragonResonance.Serializables
+namespace Praenaris.Serializables
 {
 	[Serializable]
 	public struct SerializableItemGroup<T1, T2>
@@ -13,6 +13,12 @@ namespace DragonResonance.Serializables
 		{
 			First = first;
 			Second = second;
+		}
+
+		public void Deconstruct(out T1 first, out T2 second)
+		{
+			first = First;
+			second = Second;
 		}
 
 		public static implicit operator (T1, T2)(SerializableItemGroup<T1, T2> item) =>
@@ -36,6 +42,13 @@ namespace DragonResonance.Serializables
 			Third = third;
 		}
 
+		public void Deconstruct(out T1 first, out T2 second, out T3 third)
+		{
+			first = First;
+			second = Second;
+			third = Third;
+		}
+
 		public static implicit operator (T1, T2, T3)(SerializableItemGroup<T1, T2, T3> item) =>
 			(item.First, item.Second, item.Third);
 		public static implicit operator SerializableItemGroup<T1, T2, T3>((T1, T2, T3) item) =>
@@ -57,6 +70,14 @@ namespace DragonResonance.Serializables
 			Second = second;
 			Third = third;
 			Fourth = fourth;
+		}
+
+		public void Deconstruct(out T1 first, out T2 second, out T3 third, out T4 fourth)
+		{
+			first = First;
+			second = Second;
+			third = Third;
+			fourth = Fourth;
 		}
 
 		public static implicit operator (T1, T2, T3, T4)(SerializableItemGroup<T1, T2, T3, T4> item) =>
@@ -84,6 +105,15 @@ namespace DragonResonance.Serializables
 			Fifth = fifth;
 		}
 
+		public void Deconstruct(out T1 first, out T2 second, out T3 third, out T4 fourth, out T5 fifth)
+		{
+			first = First;
+			second = Second;
+			third = Third;
+			fourth = Fourth;
+			fifth = Fifth;
+		}
+
 		public static implicit operator (T1, T2, T3, T4, T5)(SerializableItemGroup<T1, T2, T3, T4, T5> item) =>
 			(item.First, item.Second, item.Third, item.Fourth, item.Fifth);
 		public static implicit operator SerializableItemGroup<T1, T2, T3, T4, T5>((T1, T2, T3, T4, T5) item) =>
@@ -109,6 +139,16 @@ namespace DragonResonance.Serializables
 			Fourth = fourth;
 			Fifth = fifth;
 			Sixth = sixth;
+		}
+
+		public void Deconstruct(out T1 first, out T2 second, out T3 third, out T4 fourth, out T5 fifth, out T6 sixth)
+		{
+			first = First;
+			second = Second;
+			third = Third;
+			fourth = Fourth;
+			fifth = Fifth;
+			sixth = Sixth;
 		}
 
 		public static implicit operator (T1, T2, T3, T4, T5, T6)(SerializableItemGroup<T1, T2, T3, T4, T5, T6> item) =>
@@ -140,6 +180,17 @@ namespace DragonResonance.Serializables
 			Seventh = seventh;
 		}
 
+		public void Deconstruct(out T1 first, out T2 second, out T3 third, out T4 fourth, out T5 fifth, out T6 sixth, out T7 seventh)
+		{
+			first = First;
+			second = Second;
+			third = Third;
+			fourth = Fourth;
+			fifth = Fifth;
+			sixth = Sixth;
+			seventh = Seventh;
+		}
+
 		public static implicit operator (T1, T2, T3, T4, T5, T6, T7)(SerializableItemGroup<T1, T2, T3, T4, T5, T6, T7> item) =>
 			(item.First, item.Second, item.Third, item.Fourth, item.Fifth, item.Sixth, item.Seventh);
 		public static implicit operator SerializableItemGroup<T1, T2, T3, T4, T5, T6, T7>((T1, T2, T3, T4, T5, T6, T7) item) =>
@@ -169,6 +220,18 @@ namespace DragonResonance.Serializables
 			Sixth = sixth;
 			Seventh = seventh;
 			Eighth = eighth;
+		}
+
+		public void Deconstruct(out T1 first, out T2 second, out T3 third, out T4 fourth, out T5 fifth, out T6 sixth, out T7 seventh, out T8 eighth)
+		{
+			first = First;
+			second = Second;
+			third = Third;
+			fourth = Fourth;
+			fifth = Fifth;
+			sixth = Sixth;
+			seventh = Seventh;
+			eighth = Eighth;
 		}
 
 		public static implicit operator (T1, T2, T3, T4, T5, T6, T7, T8)(SerializableItemGroup<T1, T2, T3, T4, T5, T6, T7, T8> item) =>
@@ -204,6 +267,19 @@ namespace DragonResonance.Serializables
 			Ninth = ninth;
 		}
 
+		public void Deconstruct(out T1 first, out T2 second, out T3 third, out T4 fourth, out T5 fifth, out T6 sixth, out T7 seventh, out T8 eighth, out T9 ninth)
+		{
+			first = First;
+			second = Second;
+			third = Third;
+			fourth = Fourth;
+			fifth = Fifth;
+			sixth = Sixth;
+			seventh = Seventh;
+			eighth = Eighth;
+			ninth = Ninth;
+		}
+
 		public static implicit operator (T1, T2, T3, T4, T5, T6, T7, T8, T9)(SerializableItemGroup<T1, T2, T3, T4, T5, T6, T7, T8, T9> item) =>
 			(item.First, item.Second, item.Third, item.Fourth, item.Fifth, item.Sixth, item.Seventh, item.Eighth, item.Ninth);
 		public static implicit operator SerializableItemGroup<T1, T2, T3, T4, T5, T6, T7, T8, T9>((T1, T2, T3, T4, T5, T6, T7, T8, T9) item) =>
@@ -212,19 +288,15 @@ namespace DragonResonance.Serializables
 }
 
 
-/*       ________________________________________________________________       */
-/*           _________   _______ ________  _______  _______  ___    _           */
-/*           |        \ |______/ |______| |  _____ |       | |  \   |           */
-/*           |________/ |     \_ |      | |______| |_______| |   \__|           */
-/*           ______ _____ _____ _____ __   _ _____ __   _ _____ _____           */
-/*           |____/ |____ [___  |   | | \  | |___| | \  | |     |____           */
-/*           |    \ |____ ____] |___| |  \_| |   | |  \_| |____ |____           */
-/*       ________________________________________________________________       */
-/*                                                                              */
-/*           David Tabernero M.  <https://github.com/davidtabernerom>           */
-/*           Dragon Resonance    <https://github.com/dragonresonance>           */
-/*                  Copyright © 2021-2026. All rights reserved.                 */
-/*                Licensed under the Apache License, Version 2.0.               */
-/*                         See LICENSE.md for more info.                        */
-/*       ________________________________________________________________       */
-/*                                                                              */
+/*                                                                                                                */
+/*       `7MM"""Mq.`7MM"""Mq.       db     `7MM"""YMM  `7MN.   `7MF'     db     `7MM"""Mq. `7MMF' .M"""bgd        */
+/*         MM   `MM. MM   `MM.     ;MM:      MM    `7    MMN.    M      ;MM:      MM   `MM.  MM  ,MI    "Y        */
+/*         MM   ,M9  MM   ,M9     ,V^MM.     MM   d      M YMb   M     ,V^MM.     MM   ,M9   MM  `MMb.            */
+/*         MMmmdM9   MMmmdM9     ,M  `MM     MMmmMM      M  `MN. M    ,M  `MM     MMmmdM9    MM    `YMMNq.        */
+/*         MM        MM  YM.     AbmmmqMA    MM   Y  ,   M   `MM.M    AbmmmqMA    MM  YM.    MM  .     `MM        */
+/*         MM        MM   `Mb.  A'     VML   MM     ,M   M     YMM   A'     VML   MM   `Mb.  MM  Mb     dM        */
+/*       .JMML.    .JMML. .JMM.AMA.   .AMMA.JMMmmmmMMM .JML.    YM .AMA.   .AMMA.JMML. .JMM.JMML.P"Ybmmd"         */
+/*                                                                                                                */
+/*                 Licensed under the Apache License, Version 2.0.  See LICENSE.md for more info.                 */
+/*                                     Copyright © 2026. All rights reserved.                                     */
+/*                                                                                                                */
