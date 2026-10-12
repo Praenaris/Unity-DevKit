@@ -23,6 +23,7 @@ namespace DragonResonance.GUI
 		[SerializeField] private int _selectedIndex = 0;
 		[SerializeField] private string _emptyValue = "-";
 		[SerializeField] private List<string> _options = new();
+		[SerializeField] private bool _loop = false; // EKAIN FIX for looping languages
 
 
 		public UnityEvent<int> OnValueChanged = null;
@@ -88,7 +89,15 @@ namespace DragonResonance.GUI
 			public void SpinTo(int index)
 			{
 				int currentSelectedIndex = _selectedIndex;
-				_selectedIndex = _options.IsEmpty() ? -1 : index.Clamp(0, (_options.Count - 1));
+				// START EKAIN FIX for looping languages
+				// _selectedIndex = _options.IsEmpty() ? -1 : index.Clamp(0, (_options.Count - 1));
+				if (_options.IsEmpty()) // EKAIN FIX looping languages
+					_selectedIndex = -1;
+				else if (_loop)
+					_selectedIndex = (((index % _options.Count) + _options.Count) % _options.Count);
+				else
+					_selectedIndex = index.Clamp(0, (_options.Count - 1));
+				// END EKAIN FIX for looping languages
 				if (_selectedIndex != currentSelectedIndex)
 					OnValueChanged?.Invoke(_selectedIndex);
 
