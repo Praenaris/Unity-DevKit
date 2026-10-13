@@ -14,6 +14,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Branches, versions and releasing
 
+### Local sessions: hands off git
+
+When working locally (on the maintainer's machine, not in a cloud session), **never run anything that changes git state unless explicitly told to**: no `add` / staging, `commit`, `merge`, `pull`, `push`, `rebase`, `reset`, `checkout` / `switch`, `stash`, `tag`, `branch` or `restore`, and no PRs. Only edit files in the working tree and leave the git side to the maintainer. Read-only commands (`status`, `diff`, `log`, `show`, `blame`, `tag --list`) are fine. Permission for one git action covers that action only, not later ones. The rules below describe how commits and releases are done when asked to do them.
+
+### Conventions
+
 - Work happens on `develop`; `master` is the release branch and is never committed to by hand.
 - **Every commit bumps `package.json` `version`**, in the same commit as the change: patch for a small addition or fix (`4.6.1 → 4.6.2`), minor for a new feature, a new tool, or a breaking move such as a namespace change (`4.5.1 → 4.6.0`). Check the latest tag (`git tag --sort=-v:refname | head -1`) and the current `package.json` before bumping; if the version was already bumped by an unpushed commit, ask whether to bump again.
 - **Pushing is releasing.** `.github/workflows/auto-merge-and-tag.yml` runs on every push to any branch: if no `v<version>` tag exists, it merges the pushed branch into `master`, tags it, and the tag triggers `auto-sign.yml` (signs the package with the Unity UPM CLI and creates a GitHub Release). OpenUPM picks the tag up from there. So, outside cloud sessions (see below), **never push unless asked**, and a push without a version bump releases nothing.
@@ -110,5 +116,5 @@ The csproj only carries the host project's defines, so code behind `UNITY_NGO`, 
 
 ## Files Unity cares about
 
-- Every file and folder has a `.meta` committed alongside it. When creating a file outside the Editor, Unity generates its `.meta` on the next refocus; commit it with the file. When moving or renaming, move the `.meta` too so the GUID survives (consumers' scenes and prefabs reference DevKit scripts by GUID).
+- Every file and folder has a `.meta` committed alongside it. When creating a file outside the Editor, Unity generates its `.meta` on the next refocus; it belongs in the same commit as the file. When moving or renaming, move the `.meta` too so the GUID survives (consumers' scenes and prefabs reference DevKit scripts by GUID).
 - Keep `package.json` fields other than `version` stable unless asked (`unity`, `name` and `displayName` affect every consumer).
