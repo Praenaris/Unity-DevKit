@@ -21,7 +21,12 @@ When working locally (on the maintainer's machine, not in a cloud session), **ne
 ### Conventions
 
 - Work happens on `develop`; `master` is the release branch and is never committed to by hand.
-- **Every commit bumps `package.json` `version`**, in the same commit as the change: patch for a small addition or fix (`4.6.1 → 4.6.2`), minor for a new feature, a new tool, or a breaking move such as a namespace change (`4.5.1 → 4.6.0`). Check the latest tag (`git tag --sort=-v:refname | head -1`) and the current `package.json` before bumping; if the version was already bumped by an unpushed commit, ask whether to bump again.
+- **Every set of changes bumps `package.json` `version`**, as part of the change itself and **without committing** (the maintainer commits; the bump goes into that same commit):
+  - **Patch** (`4.6.1 → 4.6.2`): backwards compatible: bugfixes and a few small additions.
+  - **Minor** (`4.6.2 → 4.7.0`, patch reset to 0): bigger features (e.g. a new tool or subsystem) or any breaking change (renamed/moved/removed public members, namespace moves, changed signatures or behaviour consumers rely on).
+  - **Major**: never; only the maintainer bumps it.
+  - One bump per set of changes, not per edit. Compare `package.json` with the committed one (`git diff -- package.json`) and the latest tag (`git tag --sort=-v:refname | head -1`): if the working tree already carries an uncommitted bump, the new changes share it, only raised from patch to minor if they need it. If the version is ahead of the latest tag because of an unpushed commit, ask whether to bump again.
+  - Say which bump you made and why in the summary.
 - **Pushing is releasing.** `.github/workflows/auto-merge-and-tag.yml` runs on every push to any branch: if no `v<version>` tag exists, it merges the pushed branch into `master`, tags it, and the tag triggers `auto-sign.yml` (signs the package with the Unity UPM CLI and creates a GitHub Release). OpenUPM picks the tag up from there. So, outside cloud sessions (see below), **never push unless asked**, and a push without a version bump releases nothing.
 - Commit messages: one imperative sentence, no prefix and no body, often joining two changes with a comma ("Add PlayerPrefs Editor tool, import FloatingBob miscellany script", "Fix LayerMask Drawer, add With...() extensions to vectors"). Verbs in use: Add, Fix, Develop, Rework, Optimize, Change, Create, Update, Remove, Import.
 
@@ -57,7 +62,7 @@ Consequences:
 - `Runtime/Logging/`: static `Log` (`Info` / `Emphasis` / `Warning` / `Error` / `Exception`, caller name and file stamped via `[CallerMemberName]` / `[CallerFilePath]`), `HLogger`, `ELogLevel`, `ELogSeverity`. Inside a `PossumBehaviour` subclass, bare `Log` resolves to the inherited method, not this class.
 - `Runtime/GUI/`: `Panel<T>`, `Spinbox`, `Cursorman`, selectable helpers, autoselection, parallax, responsive layout, spritesheet player.
 - `Runtime/Mathematics/` (`MathX`, `ColorX`, `SSemanticVersion`, `TransformPoint`, `Randomizers/` with Mersenne Twister and `UnrepeatedRandom`), `Runtime/Databases/` (CSV/TSV `Sheet`, `HeaderedSheet`), `Runtime/Serializables/` (`SerializableKeyValuePair`, `SerializableItemGroup`), `Runtime/Miscellany/` (slideshows, hierarchy separator, define-symbol based destroyers/disablers, `Version`, …), `Runtime/Debugging/`, `Runtime/Networking/`.
-- `Editor/Building/` (define togglers, `BuildPropertiesStamper`, `PreloadedAssets`), `Editor/Tools/` (GUID Finder, Scene Git Changes / `SceneDiffTool`, PlayerPrefs Editor, EventSystem selection indicator, prefs cleaner, troublesome-scale checker, `BuildingPipeline/`), `Editor/GUI/`, `Editor/Importers/` (TSV importer), `Editor/Debugging/`, `Editor/Miscellany/`, `Editor/Serializables/`.
+- `Editor/Building/` (define togglers, `BuildPropertiesStamper`, `PreloadedAssets`), `Editor/Tools/` (GUID Finder, Scene Git Changes / `SceneDiffTool` (active scene, or the prefab open in Prefab Mode), PlayerPrefs Editor, EventSystem selection indicator, prefs cleaner, troublesome-scale checker, `BuildingPipeline/`), `Editor/GUI/`, `Editor/Importers/` (TSV importer), `Editor/Debugging/`, `Editor/Miscellany/`, `Editor/Serializables/`.
 - Menus: legacy items live under `Tools/Dragon Resonance/` and `Window/Dragon Resonance/`; the newest tool uses `Window/Praenaris/`. New menu items go under `Praenaris`. The define togglers live under `Build/`.
 
 
