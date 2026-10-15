@@ -20,9 +20,9 @@ using UnityObject = UnityEngine.Object;
 namespace Praenaris.Editor.Tools
 {
 	/// <summary>
-	/// Lists the objects of the active scene that are still uncommitted, by diffing the scene file on
-	/// disk against its HEAD revision one YAML document at a time, and mapping every differing
-	/// document back to the GameObject or prefab instance that owns it.
+	/// Lists the objects of the active scene, or of the prefab open in Prefab Mode, that are still
+	/// uncommitted, by diffing the asset file on disk against its HEAD revision one YAML document at a
+	/// time, and mapping every differing document back to the GameObject or prefab instance that owns it.
 	/// </summary>
 	public class SceneDiffTool : EditorWindow
 	{
@@ -98,12 +98,13 @@ namespace Praenaris.Editor.Tools
 		private static GUIStyle[] _tagStyles = null;
 
 		private readonly List<SceneChange> _changes = new List<SceneChange>();
-		private string _sceneName = "";
-		private string _sceneFileName = "";
-		private string _sceneGuid = "";
+		private string _assetName = "";
+		private string _assetFileName = "";
+		private string _assetGuid = "";
 		private string _message = "";
 		private MessageType _messageType = MessageType.Info;
-		private bool _sceneIsDirty = false;
+		private bool _isPrefab = false;
+		private bool _assetIsDirty = false;
 		private bool _hasScanned = false;
 		private bool _hideReviewed = false;
 		private int _reviewedCount = 0;
@@ -116,6 +117,9 @@ namespace Praenaris.Editor.Tools
 			{
 				EditorSceneManager.sceneSaved += OnSceneSaved;
 				EditorSceneManager.sceneOpened += OnSceneOpened;
+				PrefabStage.prefabStageOpened += OnPrefabStageOpened;
+				PrefabStage.prefabStageClosing += OnPrefabStageClosing;
+				PrefabStage.prefabSaved += OnPrefabSaved;
 				_hideReviewed = EditorPrefs.GetBool(HideReviewedPrefsKey, false);
 				Refresh();
 			}
@@ -124,6 +128,10 @@ namespace Praenaris.Editor.Tools
 			{
 				EditorSceneManager.sceneSaved -= OnSceneSaved;
 				EditorSceneManager.sceneOpened -= OnSceneOpened;
+				PrefabStage.prefabStageOpened -= OnPrefabStageOpened;
+				PrefabStage.prefabStageClosing -= OnPrefabStageClosing;
+				PrefabStage.prefabSaved -= OnPrefabSaved;
+				EditorApplication.delayCall -= Refresh;
 			}
 
 			private void OnFocus() => Refresh();
@@ -131,6 +139,16 @@ namespace Praenaris.Editor.Tools
 			private void OnSceneSaved(Scene scene) => Refresh();
 
 			private void OnSceneOpened(Scene scene, OpenSceneMode mode) => Refresh();
+
+			private void OnPrefabStageOpened(PrefabStage prefabStage) => Refresh();
+
+			private void OnPrefabStageClosing(PrefabStage prefabStage)	// Deferred, as the closing stage is still the current one at this point
+			{
+				EditorApplication.delayCall -= Refresh;
+				EditorApplication.delayCall += Refresh;
+			}
+
+			private void OnPrefabSaved(GameObject prefabRoot) => Refresh();
 
 			private void OnGUI()
 			{
@@ -142,7 +160,7 @@ namespace Praenaris.Editor.Tools
 
 				if (_changes.Count == 0) {
 					if (_hasScanned && string.IsNullOrEmpty(_message))
-						EditorGUILayout.HelpBox("No uncommitted changes found in this scene.", MessageType.Info);
+						EditorGUILayout.HelpBox($"No uncommitted changes found in this {this.AssetKind}.", MessageType.Info);
 					return;
 				}
 
@@ -158,7 +176,7 @@ namespace Praenaris.Editor.Tools
 			[MenuItem("Window/Dragon Resonance/Scene Git Changes")]
 			public static void CreateWindow()
 			{
-				SceneDiffTool window = GetWindow<SceneDiffTool>("Scene Changes");
+				SceneDiffTool window = GetWindow<SceneDiffTool>("Git Changes");
 				window.minSize = new Vector2(360f, 200f);
 			}
 
@@ -209,16 +227,28 @@ namespace Praenaris.Editor.Tools
 
 			private void DrawHeader()
 			{
-				EditorGUILayout.LabelField("Scene", EditorStyles.boldLabel);
-				EditorGUILayout.LabelField(string.IsNullOrEmpty(_sceneName) ? "<none>" : _sceneName, EditorStyles.miniLabel);
+				EditorGUILayout.LabelField(_isPrefab ? "Prefab" : "Scene", EditorStyles.boldLabel);
+				EditorGUILayout.LabelField(string.IsNullOrEmpty(_assetName) ? "<none>" : _assetName, EditorStyles.miniLabel);
 
-				if (!_sceneIsDirty) return;
+				if (!_assetIsDirty) return;
 
-				EditorGUILayout.HelpBox("This scene has unsaved changes. Git only sees the file on disk, so save the scene to include them.", MessageType.Warning);
-				if (GUILayout.Button("Save scene and refresh")) {
-					EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
+				EditorGUILayout.HelpBox($"This {this.AssetKind} has unsaved changes. Git only sees the file on disk, so save the {this.AssetKind} to include them.", MessageType.Warning);
+				if (GUILayout.Button($"Save {this.AssetKind} and refresh")) {
+					SaveAsset();
 					Refresh();
 				}
+			}
+
+			private static void SaveAsset()
+			{
+				PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+				if (prefabStage == null) {
+					EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
+					return;
+				}
+
+				PrefabUtility.SaveAsPrefabAsset(prefabStage.prefabContentsRoot, prefabStage.assetPath);
+				prefabStage.ClearDirtiness();
 			}
 
 			private void DrawChangeList()
@@ -227,7 +257,7 @@ namespace Praenaris.Editor.Tools
 				DrawProgress();
 
 				if (_hideReviewed && _reviewedCount == _changes.Count) {
-					EditorGUILayout.HelpBox("Everything in this scene has been reviewed.", MessageType.Info);
+					EditorGUILayout.HelpBox($"Everything in this {this.AssetKind} has been reviewed.", MessageType.Info);
 					return;
 				}
 
@@ -263,7 +293,7 @@ namespace Praenaris.Editor.Tools
 					}
 
 					using (new DimScope(change.IsReviewed))
-						EditorGUILayout.LabelField(BuildDescription(change), EditorStyles.miniLabel);
+						EditorGUILayout.LabelField(BuildDescription(change, this.AssetKind), EditorStyles.miniLabel);
 				}
 			}
 
@@ -343,7 +373,7 @@ namespace Praenaris.Editor.Tools
 				}
 			}
 
-			private static string BuildDescription(SceneChange change)
+			private static string BuildDescription(SceneChange change, string assetKind)
 			{
 				StringBuilder builder = new StringBuilder();
 
@@ -355,7 +385,7 @@ namespace Praenaris.Editor.Tools
 					builder.Append("  -  ");
 				}
 				else if (change.Kind == EChangeKind.Removed) {
-					builder.Append("not in the scene anymore  -  ");
+					builder.Append($"not in the {assetKind} anymore  -  ");
 				}
 
 				int listedCount = Mathf.Min(change.ChangedDocuments.Count, MaxListedParts);
@@ -384,33 +414,39 @@ namespace Praenaris.Editor.Tools
 				_hasScanned = false;
 				_reviewedCount = 0;
 
-				Scene scene = SceneManager.GetActiveScene();
-				_sceneName = scene.name;
-				_sceneFileName = "";
-				_sceneGuid = "";
-				_sceneIsDirty = scene.isDirty;
+				// A prefab open in Prefab Mode takes over from the scene behind it, as the Hierarchy does
+				PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+				_isPrefab = (prefabStage != null);
 
-				if (!scene.IsValid() || string.IsNullOrEmpty(scene.path)) {
-					SetMessage("The active scene has never been saved to disk, so there is nothing to compare it against.", MessageType.Warning);
+				Scene scene = _isPrefab ? prefabStage.scene : SceneManager.GetActiveScene();
+				string assetPath = _isPrefab ? prefabStage.assetPath : scene.path;
+				string displayName = _isPrefab ? prefabStage.prefabContentsRoot.name : scene.name;
+				_assetName = displayName;
+				_assetFileName = "";
+				_assetGuid = "";
+				_assetIsDirty = scene.isDirty;
+
+				if (!scene.IsValid() || string.IsNullOrEmpty(assetPath)) {
+					SetMessage($"The active {this.AssetKind} has never been saved to disk, so there is nothing to compare it against.", MessageType.Warning);
 					return;
 				}
 
 				string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-				string absoluteScenePath = Path.GetFullPath(Path.Combine(projectRoot, scene.path));
+				string absoluteAssetPath = Path.GetFullPath(Path.Combine(projectRoot, assetPath));
 
-				if (!File.Exists(absoluteScenePath)) {
-					SetMessage($"Could not find the scene file on disk at '{absoluteScenePath}'.", MessageType.Error);
+				if (!File.Exists(absoluteAssetPath)) {
+					SetMessage($"Could not find the {this.AssetKind} file on disk at '{absoluteAssetPath}'.", MessageType.Error);
 					return;
 				}
 
-				string sceneDirectory = Path.GetDirectoryName(absoluteScenePath);
-				_sceneFileName = Path.GetFileName(absoluteScenePath);
-				_sceneGuid = AssetDatabase.AssetPathToGUID(scene.path);
-				_sceneName = $"{scene.name}  ({scene.path})";
+				string assetDirectory = Path.GetDirectoryName(absoluteAssetPath);
+				_assetFileName = Path.GetFileName(absoluteAssetPath);
+				_assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
+				_assetName = $"{displayName}  ({assetPath})";
 
-				// Git is run from the scene's own folder, so this also works when the Unity project is a
-				// subfolder of the repository, or when the scene lives inside a submodule.
-				if (!TryRunGit(sceneDirectory, $"status --porcelain -- \"{_sceneFileName}\"", out string statusOutput, out string statusError)) {
+				// Git is run from the asset's own folder, so this also works when the Unity project is a
+				// subfolder of the repository, or when the asset lives inside a submodule.
+				if (!TryRunGit(assetDirectory, $"status --porcelain -- \"{_assetFileName}\"", out string statusOutput, out string statusError)) {
 					SetMessage(statusError, MessageType.Error);
 					return;
 				}
@@ -418,39 +454,47 @@ namespace Praenaris.Editor.Tools
 				_hasScanned = true;
 
 				if (string.IsNullOrWhiteSpace(statusOutput)) {
-					// Nothing left to review in this scene, so the stored ticks are spent.
+					// Nothing left to review in this asset, so the stored ticks are spent.
 					ClearReviewState();
 					return;
 				}
 
 				string statusCode = statusOutput.Length >= 2 ? statusOutput.Substring(0, 2) : statusOutput;
 				if (statusCode.Contains("?") || statusCode.Contains("A")) {
-					SetMessage($"'{_sceneFileName}' has never been committed, so every object in it is new.", MessageType.Warning);
+					SetMessage($"'{_assetFileName}' has never been committed, so every object in it is new.", MessageType.Warning);
 					return;
 				}
 
-				if (!TryRunGit(sceneDirectory, $"show \"HEAD:./{_sceneFileName}\"", out string committedText, out string showError)) {
+				if (!TryRunGit(assetDirectory, $"show \"HEAD:./{_assetFileName}\"", out string committedText, out string showError)) {
 					SetMessage(showError, MessageType.Error);
 					return;
 				}
 
 				try {
-					BuildChanges(scene, committedText, File.ReadAllText(absoluteScenePath));
+					Dictionary<long, GameObject> gameObjectsByFileId = new Dictionary<long, GameObject>();
+					Dictionary<long, GameObject> gameObjectsByPrefabInstanceId = new Dictionary<long, GameObject>();
+					Transform hierarchyRoot = null;
+
+					if (_isPrefab) {
+						BuildPrefabIndex(assetPath, prefabStage.prefabContentsRoot, gameObjectsByFileId, gameObjectsByPrefabInstanceId);
+						hierarchyRoot = prefabStage.prefabContentsRoot.transform.parent;	// Leaves out the editing environment, if any
+					}
+					else {
+						BuildSceneIndex(scene, gameObjectsByFileId, gameObjectsByPrefabInstanceId);
+					}
+
+					BuildChanges(committedText, File.ReadAllText(absoluteAssetPath), gameObjectsByFileId, gameObjectsByPrefabInstanceId, hierarchyRoot);
 				}
 				catch (Exception exception) {
 					HLogger.LogException(exception, typeof(SceneDiffTool));
-					SetMessage($"Could not diff the scene: {exception.Message}", MessageType.Error);
+					SetMessage($"Could not diff the {this.AssetKind}: {exception.Message}", MessageType.Error);
 				}
 			}
 
-			private void BuildChanges(Scene scene, string committedText, string workingText)
+			private void BuildChanges(string committedText, string workingText, Dictionary<long, GameObject> gameObjectsByFileId, Dictionary<long, GameObject> gameObjectsByPrefabInstanceId, Transform hierarchyRoot)
 			{
 				Dictionary<long, Document> committed = ParseDocuments(committedText);
 				Dictionary<long, Document> working = ParseDocuments(workingText);
-
-				Dictionary<long, GameObject> gameObjectsByFileId = new Dictionary<long, GameObject>();
-				Dictionary<long, GameObject> gameObjectsByPrefabInstanceId = new Dictionary<long, GameObject>();
-				BuildSceneIndex(scene, gameObjectsByFileId, gameObjectsByPrefabInstanceId);
 
 				Dictionary<long, SceneChange> changesByOwner = new Dictionary<long, SceneChange>();
 
@@ -469,8 +513,8 @@ namespace Praenaris.Editor.Tools
 				Dictionary<long, string> reviewState = LoadReviewState();
 
 				foreach (SceneChange change in changesByOwner.Values) {
-					ResolveTarget(change, gameObjectsByFileId, gameObjectsByPrefabInstanceId);
-					ResolveName(change, working, committed);
+					ResolveTarget(change, gameObjectsByFileId, gameObjectsByPrefabInstanceId, hierarchyRoot);
+					ResolveName(change, working, committed, _isPrefab ? "Prefab settings" : "Scene settings");
 
 					// Sorting first keeps both the hash and the listed types stable across refreshes,
 					// since the documents are walked in dictionary order.
@@ -560,7 +604,7 @@ namespace Praenaris.Editor.Tools
 				return currentId;
 			}
 
-			private static void ResolveTarget(SceneChange change, Dictionary<long, GameObject> gameObjectsByFileId, Dictionary<long, GameObject> gameObjectsByPrefabInstanceId)
+			private static void ResolveTarget(SceneChange change, Dictionary<long, GameObject> gameObjectsByFileId, Dictionary<long, GameObject> gameObjectsByPrefabInstanceId, Transform hierarchyRoot)
 			{
 				if (change.IsSceneWide) return;
 
@@ -568,13 +612,13 @@ namespace Praenaris.Editor.Tools
 				if (!lookup.TryGetValue(change.FileId, out GameObject target) || target == null) return;
 
 				change.Target = target;
-				change.HierarchyPath = GetHierarchyPath(target);
+				change.HierarchyPath = GetHierarchyPath(target, hierarchyRoot);
 			}
 
-			private static void ResolveName(SceneChange change, Dictionary<long, Document> working, Dictionary<long, Document> committed)
+			private static void ResolveName(SceneChange change, Dictionary<long, Document> working, Dictionary<long, Document> committed, string assetWideName)
 			{
 				if (change.IsSceneWide) {
-					change.Name = "Scene settings";
+					change.Name = assetWideName;
 					return;
 				}
 
@@ -642,9 +686,9 @@ namespace Praenaris.Editor.Tools
 			private Dictionary<long, string> LoadReviewState()
 			{
 				Dictionary<long, string> reviewState = new Dictionary<long, string>();
-				if (string.IsNullOrEmpty(_sceneGuid)) return reviewState;
+				if (string.IsNullOrEmpty(_assetGuid)) return reviewState;
 
-				string raw = EditorPrefs.GetString(ReviewedPrefsKeyPrefix + _sceneGuid, "");
+				string raw = EditorPrefs.GetString(ReviewedPrefsKeyPrefix + _assetGuid, "");
 				if (raw.Length == 0) return reviewState;
 
 				foreach (string entry in raw.Split(';')) {
@@ -660,7 +704,7 @@ namespace Praenaris.Editor.Tools
 
 			private void SaveReviewState()
 			{
-				if (string.IsNullOrEmpty(_sceneGuid)) return;
+				if (string.IsNullOrEmpty(_assetGuid)) return;
 
 				StringBuilder builder = new StringBuilder();
 				foreach (SceneChange change in _changes) {
@@ -672,16 +716,16 @@ namespace Praenaris.Editor.Tools
 					builder.Append(change.ContentHash);
 				}
 
-				string key = ReviewedPrefsKeyPrefix + _sceneGuid;
+				string key = ReviewedPrefsKeyPrefix + _assetGuid;
 				if (builder.Length == 0) EditorPrefs.DeleteKey(key);
 				else EditorPrefs.SetString(key, builder.ToString());
 			}
 
 			private void ClearReviewState()
 			{
-				if (string.IsNullOrEmpty(_sceneGuid)) return;
+				if (string.IsNullOrEmpty(_assetGuid)) return;
 
-				EditorPrefs.DeleteKey(ReviewedPrefsKeyPrefix + _sceneGuid);
+				EditorPrefs.DeleteKey(ReviewedPrefsKeyPrefix + _assetGuid);
 			}
 
 			private void ResetReviewState()
@@ -793,12 +837,63 @@ namespace Praenaris.Editor.Tools
 				gameObjectsByPrefabInstanceId[prefabInstanceId] = instanceRoot;
 			}
 
-			private static string GetHierarchyPath(GameObject gameObject)
+			/// <summary>
+			/// Prefab Mode edits a copy of the prefab whose objects don't carry the asset's file IDs, so
+			/// the IDs are read from the asset itself, and each asset object is then matched to its copy
+			/// in the stage by hierarchy position. Objects with no copy (unsaved structural changes) are
+			/// pointed at the asset's own object instead.
+			/// </summary>
+			private static void BuildPrefabIndex(string assetPath, GameObject contentsRoot, Dictionary<long, GameObject> gameObjectsByFileId, Dictionary<long, GameObject> gameObjectsByPrefabInstanceId)
+			{
+				GameObject assetRoot = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+				if (assetRoot == null) return;
+
+				foreach (Transform assetTransform in assetRoot.GetComponentsInChildren<Transform>(true)) {
+					GameObject assetObject = assetTransform.gameObject;
+
+					// Objects coming from a nested prefab (or from the base of a variant) are only stored
+					// through the outermost PrefabInstance document of this file.
+					if (PrefabUtility.IsPartOfPrefabInstance(assetObject)) {
+						GameObject instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(assetObject);
+						UnityObject handle = (instanceRoot != null) ? PrefabUtility.GetPrefabInstanceHandle(instanceRoot) : null;
+						if ((handle != null) && TryGetLocalFileId(handle, out long prefabInstanceId))
+							gameObjectsByPrefabInstanceId[prefabInstanceId] = FindStageCounterpart(instanceRoot.transform, assetRoot.transform, contentsRoot);
+						continue;
+					}
+
+					if (TryGetLocalFileId(assetObject, out long fileId))
+						gameObjectsByFileId[fileId] = FindStageCounterpart(assetTransform, assetRoot.transform, contentsRoot);
+				}
+			}
+
+			private static GameObject FindStageCounterpart(Transform assetTransform, Transform assetRoot, GameObject contentsRoot)
+			{
+				List<int> siblingIndices = new List<int>();
+				for (Transform current = assetTransform; current != assetRoot; current = current.parent)
+					siblingIndices.Add(current.GetSiblingIndex());
+
+				Transform counterpart = contentsRoot.transform;
+				for (int index = siblingIndices.Count - 1; index >= 0; index--) {
+					if (siblingIndices[index] >= counterpart.childCount)
+						return assetTransform.gameObject;
+					counterpart = counterpart.GetChild(siblingIndices[index]);
+				}
+
+				return (counterpart.name == assetTransform.name) ? counterpart.gameObject : assetTransform.gameObject;
+			}
+
+			private static bool TryGetLocalFileId(UnityObject unityObject, out long fileId)
+			{
+				fileId = 0L;
+				return (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(unityObject, out string _, out fileId) && (fileId != 0L));
+			}
+
+			private static string GetHierarchyPath(GameObject gameObject, Transform hierarchyRoot)
 			{
 				StringBuilder builder = new StringBuilder(gameObject.name);
 
 				Transform current = gameObject.transform.parent;
-				while (current != null) {
+				while ((current != null) && (current != hierarchyRoot)) {
 					builder.Insert(0, '/').Insert(0, current.name);
 					current = current.parent;
 				}
@@ -953,6 +1048,13 @@ namespace Praenaris.Editor.Tools
 				_message = message;
 				_messageType = messageType;
 			}
+
+		#endregion
+
+
+		#region Properties
+
+			private string AssetKind => (_isPrefab ? "prefab" : "scene");
 
 		#endregion
 	}
