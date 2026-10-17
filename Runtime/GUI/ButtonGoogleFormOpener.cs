@@ -46,7 +46,7 @@ namespace DragonResonance.GUI
 					}
 
 					if (!string.IsNullOrWhiteSpace(_gamePlatformEntryID)) {	// Game Platform (Steam, Epic Games, ...)
-						#if STEAMWORKS_INTEGRATION
+						#if (STEAMWORKS_INTEGRATION && !DISABLESTEAMWORKS)
 							url.Append('&' + FormatParamPair(_gamePlatformEntryID, "Steam"));
 						#endif
 					}

@@ -26,7 +26,7 @@ namespace DragonResonance.Miscellany
 				public static string AppOS => null;
 			#endif
 
-			#if STEAMWORKS_INTEGRATION
+			#if (STEAMWORKS_INTEGRATION && !DISABLESTEAMWORKS)
 				public static string AppPlatform => "Steam";
 			#else
 				public static string AppPlatform => null;
