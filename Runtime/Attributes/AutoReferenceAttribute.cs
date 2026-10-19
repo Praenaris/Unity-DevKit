@@ -5,7 +5,17 @@ using UnityEngine;
 namespace Praenaris.Attributes
 {
 	[AttributeUsage(AttributeTargets.Field)]
-	public class AutoReferenceAttribute : PropertyAttribute { }
+	public class AutoReferenceAttribute : PropertyAttribute
+	{
+		private readonly AutoReferenceSource _sources;
+
+		public AutoReferenceAttribute(AutoReferenceSource sources = AutoReferenceSource.Automatic)
+		{
+			_sources = sources;
+		}
+
+		public AutoReferenceSource Sources => _sources;
+	}
 }
 
 
