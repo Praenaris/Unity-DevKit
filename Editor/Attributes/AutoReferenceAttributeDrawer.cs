@@ -2,8 +2,11 @@
 
 
 using Praenaris.Attributes;
+using System.Collections.Generic;
+using System.Linq;
 using System;
 using UnityEditor;
+using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
 
@@ -13,6 +16,9 @@ namespace Praenaris.Editor.Attributes
 	[CustomPropertyDrawer(typeof(AutoReferenceAttribute))]
 	public class AutoReferenceAttributeDrawer : PropertyDrawer
 	{
+		private readonly HashSet<(UnityObject, string)> _searchedProperties = new();	// Searched once per selection, so an empty field doesn't search on every repaint
+
+
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			if (property.propertyType != SerializedPropertyType.ObjectReference || !typeof(UnityObject).IsAssignableFrom(base.fieldInfo.FieldType)) {
@@ -20,7 +26,7 @@ namespace Praenaris.Editor.Attributes
 				return;
 			}
 
-			if (property.objectReferenceValue == null)
+			if (_searchedProperties.Add((property.serializedObject.targetObject, property.propertyPath)))
 				this.TryAutoFill(property);
 
 			EditorGUI.PropertyField(position, property, label, true);
@@ -29,17 +35,77 @@ namespace Praenaris.Editor.Attributes
 
 		private void TryAutoFill(SerializedProperty property)
 		{
+			if (!property.hasMultipleDifferentValues && (property.objectReferenceValue != null)) return;
+
 			Type type = base.fieldInfo.FieldType;
-			string[] guids = AssetDatabase.FindAssets($"t:{type.Name}");
+			AutoReferenceSource sources = GetSources(type, ((AutoReferenceAttribute)base.attribute).Sources);
+			UnityObject[] targets = property.serializedObject.targetObjects;
 
-			foreach (string guid in guids) {
-				UnityObject asset = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), type);
-				if (asset == null) continue;
-
-				property.objectReferenceValue = asset;
+			if (targets.Length == 1) {
+				UnityObject reference = Resolve(targets[0], type, sources);
+				if (reference != null)
+					property.objectReferenceValue = reference;
 				return;
 			}
+
+			foreach (UnityObject target in targets) {	// Each target resolves its own reference (e.g. its own component)
+				using SerializedObject targetObject = new(target);
+				SerializedProperty targetProperty = targetObject.FindProperty(property.propertyPath);
+				if (targetProperty.objectReferenceValue != null) continue;
+
+				UnityObject reference = Resolve(target, type, sources);
+				if (reference == null) continue;
+
+				targetProperty.objectReferenceValue = reference;
+				targetObject.ApplyModifiedProperties();
+			}
 		}
+
+
+		private static UnityObject Resolve(UnityObject target, Type type, AutoReferenceSource sources)
+		{
+			UnityObject reference = null;
+
+			if (IsComponent(type) && (target is Component component)) {
+				GameObject gameObject = component.gameObject;
+
+				if (sources.HasFlag(AutoReferenceSource.Self) && TryPick(gameObject.GetComponents(type), out reference))
+					return reference;
+				if (sources.HasFlag(AutoReferenceSource.Children) && TryPick(gameObject.GetComponentsInChildren(type, true).Where(candidate => (candidate.gameObject != gameObject)), out reference))
+					return reference;
+				if (sources.HasFlag(AutoReferenceSource.Parents) && TryPick(gameObject.GetComponentsInParent(type, true).Where(candidate => (candidate.gameObject != gameObject)), out reference))
+					return reference;
+				if (sources.HasFlag(AutoReferenceSource.Scene) && !EditorUtility.IsPersistent(target) && TryPick(FindInScene(gameObject.scene, type), out reference))	// Assets can't reference scene objects
+					return reference;
+			}
+
+			if (sources.HasFlag(AutoReferenceSource.Project) && TryPick(FindInProject(type), out reference))
+				return reference;
+
+			return null;
+		}
+
+
+		private static bool TryPick(IEnumerable<UnityObject> candidates, out UnityObject reference)	// Found only if unique; several candidates stop the search, since picking one would be a guess
+		{
+			UnityObject[] distinctCandidates = candidates.Distinct().Take(2).ToArray();
+			reference = ((distinctCandidates.Length == 1) ? distinctCandidates[0] : null);
+			return (distinctCandidates.Length > 0);
+		}
+
+
+		private static IEnumerable<UnityObject> FindInScene(Scene scene, Type type) =>	// The object's own scene, or its prefab stage in Prefab Mode
+			((scene.IsValid() && scene.isLoaded) ? scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren(type, true)) : Enumerable.Empty<UnityObject>());
+
+		private static IEnumerable<UnityObject> FindInProject(Type type) =>
+			AssetDatabase.FindAssets($"t:{type.Name}")
+				.Select(guid => AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), type))
+				.Where(asset => (asset != null));
+
+		private static AutoReferenceSource GetSources(Type type, AutoReferenceSource sources) =>
+			((sources != AutoReferenceSource.Automatic) ? sources : (IsComponent(type) ? (AutoReferenceSource.Self | AutoReferenceSource.Scene) : AutoReferenceSource.Project));
+
+		private static bool IsComponent(Type type) => typeof(Component).IsAssignableFrom(type);
 	}
 }
 
