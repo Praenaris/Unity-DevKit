@@ -16,9 +16,6 @@ namespace Praenaris.Editor.Attributes
 	[CustomPropertyDrawer(typeof(AutoReferenceAttribute))]
 	public class AutoReferenceAttributeDrawer : PropertyDrawer
 	{
-		private readonly HashSet<(UnityObject, string)> _searchedProperties = new();	// Searched once per selection, so an empty field doesn't search on every repaint
-
-
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			if (property.propertyType != SerializedPropertyType.ObjectReference || !typeof(UnityObject).IsAssignableFrom(base.fieldInfo.FieldType)) {
@@ -26,8 +23,7 @@ namespace Praenaris.Editor.Attributes
 				return;
 			}
 
-			if (_searchedProperties.Add((property.serializedObject.targetObject, property.propertyPath)))
-				this.TryAutoFill(property);
+			this.TryAutoFill(property);
 
 			EditorGUI.PropertyField(position, property, label, true);
 		}
@@ -43,8 +39,10 @@ namespace Praenaris.Editor.Attributes
 
 			if (targets.Length == 1) {
 				UnityObject reference = Resolve(targets[0], type, sources);
-				if (reference != null)
-					property.objectReferenceValue = reference;
+				if (reference == null) return;
+
+				property.objectReferenceValue = reference;
+				property.serializedObject.ApplyModifiedProperties();	// Not every inspector applies a change made outside a change check
 				return;
 			}
 
