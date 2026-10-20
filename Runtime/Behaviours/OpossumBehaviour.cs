@@ -17,10 +17,10 @@ namespace DragonResonance.Behaviours
 
 			protected T GetComponentIfNull<T>(T statement) where T : Component =>
 				((statement == null) ? GetComponent<T>() : statement);
-			protected T GetComponentInChildrenIfNull<T>(T statement) where T : Component =>
-				((statement == null) ? GetComponentInChildren<T>() : statement);
-			protected T GetComponentInParentIfNull<T>(T statement) where T : Component =>
-				((statement == null) ? GetComponentInParent<T>() : statement);
+			protected T GetComponentInChildrenIfNull<T>(T statement, bool includeInactive = true) where T : Component =>
+				((statement == null) ? GetComponentInChildren<T>(includeInactive) : statement);
+			protected T GetComponentInParentIfNull<T>(T statement, bool includeInactive = true) where T : Component =>
+				((statement == null) ? GetComponentInParent<T>(includeInactive) : statement);
 
 			protected T FindComponentIfNull<T>(T statement) where T : Component =>
 				FindComponentIfNull(statement, true);
