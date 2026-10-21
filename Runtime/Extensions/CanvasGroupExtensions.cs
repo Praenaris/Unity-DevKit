@@ -8,8 +8,8 @@ namespace DragonResonance.Extensions
 		public static void MakeVisible(this CanvasGroup target) => target.alpha = 1f;
 		public static void MakeInvisible(this CanvasGroup target) => target.alpha = 0f;
 
-		public static bool IsFullyVisible(this CanvasGroup target) => target.alpha.Approximately(1f);
-		public static bool IsFullyInvisible(this CanvasGroup target) => target.alpha.Approximately(0f);
+		public static bool IsFullyVisible(this CanvasGroup target) => target.alpha.IsApproximately(1f);
+		public static bool IsFullyInvisible(this CanvasGroup target) => target.alpha.IsApproximately(0f);
 	}
 }
 

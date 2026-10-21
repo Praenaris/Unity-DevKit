@@ -19,7 +19,7 @@ namespace DragonResonance.Extensions
 			public static bool IsBetweenExclusive(this float testValue, int minExclusive, int maxExclusive) =>
 				((testValue > minExclusive) && (testValue < maxExclusive));
 
-			public static bool Approximately(this float source, float value) =>
+			public static bool IsApproximately(this float source, float value) =>
 				(Mathf.Approximately(source, value));
 
 		#endregion
