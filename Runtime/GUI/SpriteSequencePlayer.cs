@@ -27,8 +27,8 @@ namespace DragonResonance.GUI
 
 		#region Events
 
-			private void OnEnable() => Restart();
-			private void OnValidate() => Restart();
+			private void OnEnable() => ResetIndex();
+			private void OnValidate() => ResetIndex();
 			private void Update() => RefreshSprite();
 
 		#endregion
@@ -48,7 +48,7 @@ namespace DragonResonance.GUI
 			{
 				_timeOffset = Time.realtimeSinceStartup;
 				_loop = false;
-				Restart();
+				ResetIndex();
 				Play();
 			}
 
@@ -57,7 +57,7 @@ namespace DragonResonance.GUI
 			{
 				_timeOffset = 0f;	// Keeps every looping player in sync
 				_loop = true;
-				Restart();
+				ResetIndex();
 				Play();
 			}
 
@@ -66,7 +66,8 @@ namespace DragonResonance.GUI
 
 		#region Privates
 
-			private void Restart() => _shownSpriteIndex = -1;
+			[ContextMenu(nameof(ResetIndex))]
+			private void ResetIndex() => _shownSpriteIndex = -1;
 
 			private void RefreshSprite()
 			{
