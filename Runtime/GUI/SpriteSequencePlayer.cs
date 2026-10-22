@@ -1,5 +1,6 @@
 using DragonResonance.Behaviours;
 using DragonResonance.Extensions;
+using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
 
@@ -14,7 +15,7 @@ namespace DragonResonance.GUI
 		[SerializeField] private bool _playing = true;
 		[SerializeField] private bool _loop = true;
 		[SerializeField] private float _speed = 4f;
-		[SerializeField] private Sprite[] _sprites = { };
+		[SerializeField] private List<Sprite> _sprites = new();
 
 		[Header("Targets")]
 		[SerializeField] private Image[] _images = { };
@@ -36,14 +37,11 @@ namespace DragonResonance.GUI
 
 		#region Publics
 
-			[ContextMenu(nameof(Play))]
 			public void Play() => _playing = true;
 
-			[ContextMenu(nameof(Stop))]
 			public void Stop() => _playing = false;
 
 
-			[ContextMenu(nameof(PlayOnce))]
 			public void PlayOnce()
 			{
 				_timeOffset = Time.realtimeSinceStartup;
@@ -52,7 +50,6 @@ namespace DragonResonance.GUI
 				Play();
 			}
 
-			[ContextMenu(nameof(PlayLoop))]
 			public void PlayLoop()
 			{
 				_timeOffset = 0f;	// Keeps every looping player in sync
@@ -66,7 +63,6 @@ namespace DragonResonance.GUI
 
 		#region Privates
 
-			[ContextMenu(nameof(ResetIndex))]
 			private void ResetIndex() => _shownSpriteIndex = -1;
 
 			private void RefreshSprite()
@@ -106,22 +102,14 @@ namespace DragonResonance.GUI
 			public float SpriteDuration => (1f / _speed);
 			public float OffsetRealtime => (Time.realtimeSinceStartup - _timeOffset);
 			public int SpritesPassed => (int)(this.OffsetRealtime * _speed.ClampLowerZero());
-			public int CurrentSpriteIndex => (_loop ? (this.SpritesPassed % _sprites.Length.LowerClamp(1)) : this.SpritesPassed.UpperClamp(_sprites.LastIndex()));
+			public int CurrentSpriteIndex => (_loop ? (this.SpritesPassed % _sprites.Count.LowerClamp(1)) : this.SpritesPassed.UpperClamp(_sprites.LastIndex()));
 
 			public float TimeOffset => _timeOffset;
 
-
-			public bool Playing
-			{
-				get => _playing;
-				set => _playing = value;
-			}
-
-			public bool Loop
-			{
-				get => _loop;
-				set => _loop = value;
-			}
+			public bool Playing { get => _playing; set => _playing = value; }
+			public bool Loop { get => _loop; set => _loop = value; }
+			public float Speed { get => _speed; set => _speed = value; }
+			public List<Sprite> Sprites => _sprites;
 
 		#endregion
 	}
