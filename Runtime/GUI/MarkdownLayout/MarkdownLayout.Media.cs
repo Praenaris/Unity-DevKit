@@ -1,7 +1,50 @@
+using System.Linq;
+using System.Text.RegularExpressions;
+using TMPro;
+using UnityEngine.UI;
+using UnityEngine;
+
+
 namespace Praenaris.GUI
 {
 	public partial class MarkdownLayout	// Media
 	{
+		private static readonly Regex ImageRegex = new(@"^!\[(?<alt>[^\]]*)\]\((?<path>[^\s)]+)(\s+""(?<title>[^""]*)"")?\)$", RegexOptions.Compiled);
+
+
+		#region Privates - Media
+
+			/// <summary>"![Alt text](Image.png "Title")", the alt text can be empty and the title is optional. The path is the key in the images map.</summary>
+			private bool TryParseImage(string line)
+			{
+				Match match = ImageRegex.Match(line.Trim());
+				if (!match.Success) return false;
+
+				string altText = match.Groups["alt"].Value;
+				string path = match.Groups["path"].Value;
+
+				FlushParagraph();
+				GameObject item = AppendItem(_imagePrefab, "image", line.Trim());
+				if (item == null) return true;
+
+				Sprite sprite = _imagesMap.FirstOrDefault(image => (image.Key == path)).Value;
+				if (sprite != null) {
+					Image image = item.GetComponentInChildren<Image>();
+					image.sprite = sprite;
+					RecordItemChanges(image);
+					return true;
+				}
+
+				Warning($"No image mapped as \"{path}\", showing its alt text instead");
+				TMP_Text label = item.GetComponentInChildren<TMP_Text>();	// Optional in the image prefab
+				if (label != null) {
+					label.text = altText;
+					RecordItemChanges(label);
+				}
+				return true;
+			}
+
+		#endregion
 	}
 }
 

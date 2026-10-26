@@ -1,9 +1,9 @@
 using DragonResonance.Behaviours;
 using DragonResonance.Extensions;
+using Praenaris.Serializables;
 using System.Collections.Generic;
 using System;
 using TMPro;
-using UnityEngine.UI;
 using UnityEngine;
 
 
@@ -28,6 +28,7 @@ namespace Praenaris.GUI
 
 		[Header("Media")]
 		[SerializeField] private GameObject _imagePrefab = null;
+		[SerializeField] private SerializableKeyValuePair<string, Sprite>[] _imagesMap = { };
 
 		[Header("Formatting")]
 		[SerializeField] private GameObject _quotePrefab = null;
@@ -72,33 +73,53 @@ namespace Praenaris.GUI
 			{
 				string[] lines = _inputMarkdown.text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
 				_paragraphLines.Clear();
+				_quoteLines.Clear();
 				foreach (string line in lines) {
 					if (string.IsNullOrWhiteSpace(line)) {
-						FlushParagraph();	// A blank line ends the paragraph
+						FlushParagraph();	// A blank line ends the paragraph or quote
+						FlushQuote();
 						continue;
 					}
 
+					if (TryParseQuote(line)) continue;
+					FlushQuote();	// Anything else ends the quote
+
 					if (TryParseHeading(line)) continue;
+					if (TryParseSeparator(line)) continue;
+					if (TryParseImage(line)) continue;
 
 					_paragraphLines.Add(line.Trim());	// Anything not recognized above is part of a paragraph
 				}
 				FlushParagraph();
+				FlushQuote();
+			}
+
+			/// <returns>The new item, or null if its prefab isn't assigned (logged as an error)</returns>
+			private GameObject AppendItem(GameObject prefab, string elementName, string text = null)
+			{
+				if (prefab == null) {
+					Error((text == null) ? $"No {elementName} prefab assigned, skipping it" : $"No {elementName} prefab assigned, skipping \"{text}\"");
+					return null;
+				}
+				return InstantiateItem(prefab);
 			}
 
 			private void AppendText(GameObject prefab, string elementName, string text)
 			{
-				if (prefab == null) {
-					Error($"No {elementName} prefab assigned, skipping \"{text}\"");
-					return;
-				}
+				GameObject item = AppendItem(prefab, elementName, text);
+				if (item == null) return;
 
-				GameObject item = InstantiateItem(prefab);
 				TMP_Text label = item.GetComponentInChildren<TMP_Text>();
 				label.text = text;
+				RecordItemChanges(label);
+			}
 
+			/// <summary>Call after changing a generated item's component, or the prefab instance reverts it when reloaded in Edit Mode.</summary>
+			private static void RecordItemChanges(Component component)
+			{
 				#if UNITY_EDITOR
 				if (!Application.isPlaying)
-					UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(label);	// Or the prefab instance reverts the text when reloaded
+					UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(component);
 				#endif
 			}
 
