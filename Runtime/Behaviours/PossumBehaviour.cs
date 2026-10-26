@@ -1,4 +1,5 @@
 using DragonResonance.Extensions;
+using Praenaris.Extensions;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
@@ -11,11 +12,11 @@ namespace DragonResonance.Behaviours
 		#region Privates
 
 			protected T GetComponentIfNull<T>(T statement) where T : Component =>
-				((statement == null) ? GetComponent<T>() : statement);
+				ComponentExtensions.GetComponentIfNull(this, statement);
 			protected T GetComponentInChildrenIfNull<T>(T statement, bool includeInactive = true) where T : Component =>
-				((statement == null) ? GetComponentInChildren<T>(includeInactive) : statement);
+				ComponentExtensions.GetComponentInChildrenIfNull(this, statement, includeInactive);
 			protected T GetComponentInParentIfNull<T>(T statement, bool includeInactive = true) where T : Component =>
-				((statement == null) ? GetComponentInParent<T>(includeInactive) : statement);
+				ComponentExtensions.GetComponentInParentIfNull(this, statement, includeInactive);
 
 			protected T FindComponentIfNull<T>(T statement) where T : Component =>
 				FindComponentIfNull(statement, true);
