@@ -1,45 +1,35 @@
-using DragonResonance.Extensions;
-using System.Collections.Generic;
-using System.Linq;
-
-
 namespace Praenaris.GUI
 {
 	public partial class MarkdownLayout	// Formatting
 	{
-		private readonly List<string> _quoteLines = new();	// The lines of the quote being read, until something ends it
-
-
 		#region Privates - Formatting
 
 			/// <summary>Lines starting with ">", consecutive ones being the same quote.</summary>
 			private bool TryParseQuote(string line)
 			{
-				string trimmedLine = line.Trim();
-				if (!trimmedLine.StartsWith(">")) return false;
+				if (line[0] != '>') return false;
 
-				FlushParagraph();
-				_quoteLines.Add(trimmedLine.Substring(1).Trim());
+				AppendBlockLine(_quotePrefab, "quote", line.Substring(1).TrimStart());
 				return true;
-			}
-
-			private void FlushQuote()
-			{
-				if (_quoteLines.IsEmpty()) return;
-
-				AppendText(_quotePrefab, "quote", string.Join(" ", _quoteLines.Where(quoteLine => !quoteLine.IsEmpty())));	// Consecutive lines are one quote
-				_quoteLines.Clear();
 			}
 
 			/// <summary>Three or more "-", "*" or "_" alone on a line, optionally spaced ("---", "* * *").</summary>
 			private bool TryParseSeparator(string line)
 			{
-				string compactLine = string.Concat(line.Where(character => !char.IsWhiteSpace(character)));
-				if ((compactLine.Length < 3) || ("-*_".IndexOf(compactLine[0]) < 0)) return false;
-				if (compactLine.Any(character => (character != compactLine[0]))) return false;	// "-*-" isn't a separator
+				char marker = line[0];
+				if ((marker != '-') && (marker != '*') && (marker != '_')) return false;
 
-				FlushParagraph();
-				AppendItem(_separatorPrefab, "separator");
+				int markerCount = 0;
+				foreach (char character in line) {
+					if (character == marker)
+						markerCount++;
+					else if (!char.IsWhiteSpace(character))
+						return false;	// "-*-" or "- item" aren't separators
+				}
+				if (markerCount < 3) return false;
+
+				FlushBlock();
+				AppendItem(_separatorPrefab, "separator", line);
 				return true;
 			}
 

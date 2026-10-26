@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Text.RegularExpressions;
+using System;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine;
@@ -17,29 +18,28 @@ namespace Praenaris.GUI
 			/// <summary>"![Alt text](Image.png "Title")", the alt text can be empty and the title is optional. The path is the key in the images map.</summary>
 			private bool TryParseImage(string line)
 			{
-				Match match = ImageRegex.Match(line.Trim());
+				if (!line.StartsWith("![", StringComparison.Ordinal)) return false;	// Cheap check before the regex
+				Match match = ImageRegex.Match(line);
 				if (!match.Success) return false;
 
-				string altText = match.Groups["alt"].Value;
-				string path = match.Groups["path"].Value;
-
-				FlushParagraph();
-				GameObject item = AppendItem(_imagePrefab, "image", line.Trim());
+				FlushBlock();
+				GameObject item = AppendItem(_imagePrefab, "image", line);
 				if (item == null) return true;
 
+				string path = match.Groups["path"].Value;
 				Sprite sprite = _imagesMap.FirstOrDefault(image => (image.Key == path)).Value;
 				if (sprite != null) {
 					Image image = item.GetComponentInChildren<Image>();
 					image.sprite = sprite;
 					RecordItemChanges(image);
-					return true;
 				}
-
-				Warning($"No image mapped as \"{path}\", showing its alt text instead");
-				TMP_Text label = item.GetComponentInChildren<TMP_Text>();	// Optional in the image prefab
-				if (label != null) {
-					label.text = altText;
-					RecordItemChanges(label);
+				else {
+					Warning($"No image mapped as \"{path}\", showing its alt text instead");
+					TMP_Text label = item.GetComponentInChildren<TMP_Text>();	// Optional in the image prefab
+					if (label != null) {
+						label.text = match.Groups["alt"].Value;
+						RecordItemChanges(label);
+					}
 				}
 				return true;
 			}

@@ -11,31 +11,28 @@ namespace Praenaris.GUI
 			/// <summary>From "# Heading 1" to "###### Heading 6", optionally closed with hashes ("## Heading ##").</summary>
 			private bool TryParseHeading(string line)
 			{
-				GameObject GetHeadingPrefab(int level) => level switch {
-					1 => _heading1Prefab,
-					2 => _heading2Prefab,
-					3 => _heading3Prefab,
-					4 => _heading4Prefab,
-					5 => _heading5Prefab,
-					_ => _heading6Prefab,
-				};
-
-				string trimmedLine = line.Trim();
-				int level = 0;
-				while ((level < trimmedLine.Length) && (trimmedLine[level] == '#'))
-					level++;
+				int level = (line.Length - line.TrimStart('#').Length);
 				if ((level < 1) || (level > 6)) return false;
-				if ((level < trimmedLine.Length) && !char.IsWhiteSpace(trimmedLine[level])) return false;	// "#hashtag" isn't a heading
+				if ((level < line.Length) && !char.IsWhiteSpace(line[level])) return false;	// "#hashtag" isn't a heading
 
-				string text = trimmedLine.Substring(level).Trim();
+				string text = line.Substring(level).Trim();
 				string unclosedText = text.TrimEnd('#');
 				if (unclosedText.IsEmpty() || char.IsWhiteSpace(unclosedText[^1]))	// Only a separate closing sequence, "C#" stays as it is
 					text = unclosedText.TrimEnd();
 
-				FlushParagraph();
+				FlushBlock();
 				AppendText(GetHeadingPrefab(level), $"heading {level}", text);
 				return true;
 			}
+
+			private GameObject GetHeadingPrefab(int level) => level switch {
+				1 => _heading1Prefab,
+				2 => _heading2Prefab,
+				3 => _heading3Prefab,
+				4 => _heading4Prefab,
+				5 => _heading5Prefab,
+				_ => _heading6Prefab,
+			};
 
 		#endregion
 	}

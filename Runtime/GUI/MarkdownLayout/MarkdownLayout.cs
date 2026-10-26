@@ -2,7 +2,6 @@ using DragonResonance.Behaviours;
 using DragonResonance.Extensions;
 using Praenaris.Serializables;
 using System.Collections.Generic;
-using System;
 using TMPro;
 using UnityEngine;
 
@@ -35,7 +34,9 @@ namespace Praenaris.GUI
 		[SerializeField] private GameObject _separatorPrefab = null;
 
 
-		private readonly List<string> _paragraphLines = new();	// The lines of the paragraph being read, until something ends it
+		private readonly List<string> _blockLines = new();	// The lines of the paragraph or quote being read, until something ends it
+		private GameObject _blockPrefab = null;
+		private string _blockName = null;
 
 
 		#region Events
@@ -71,34 +72,27 @@ namespace Praenaris.GUI
 			[ContextMenu(nameof(ParseData))]
 			private void ParseData()
 			{
-				string[] lines = _inputMarkdown.text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-				_paragraphLines.Clear();
-				_quoteLines.Clear();
-				foreach (string line in lines) {
-					if (string.IsNullOrWhiteSpace(line)) {
-						FlushParagraph();	// A blank line ends the paragraph or quote
-						FlushQuote();
+				_blockLines.Clear();
+				_blockName = null;
+				foreach (string rawLine in _inputMarkdown.text.Split('\n')) {
+					string line = rawLine.Trim();	// Also drops the "\r" of Windows line endings
+					if (line.IsEmpty()) {
+						FlushBlock();	// A blank line ends the paragraph or quote
 						continue;
 					}
 
-					if (TryParseQuote(line)) continue;
-					FlushQuote();	// Anything else ends the quote
-
-					if (TryParseHeading(line)) continue;
-					if (TryParseSeparator(line)) continue;
-					if (TryParseImage(line)) continue;
-
-					_paragraphLines.Add(line.Trim());	// Anything not recognized above is part of a paragraph
+					if (TryParseHeading(line) || TryParseSeparator(line) || TryParseImage(line) || TryParseQuote(line)) continue;
+					AppendBlockLine(_paragraphPrefab, "paragraph", line);	// Anything not recognized is part of a paragraph
 				}
-				FlushParagraph();
-				FlushQuote();
+				FlushBlock();
 			}
 
+			/// <param name="source">The markdown it comes from, for the error log</param>
 			/// <returns>The new item, or null if its prefab isn't assigned (logged as an error)</returns>
-			private GameObject AppendItem(GameObject prefab, string elementName, string text = null)
+			private GameObject AppendItem(GameObject prefab, string elementName, string source)
 			{
 				if (prefab == null) {
-					Error((text == null) ? $"No {elementName} prefab assigned, skipping it" : $"No {elementName} prefab assigned, skipping \"{text}\"");
+					Error($"No {elementName} prefab assigned, skipping \"{source}\"");
 					return null;
 				}
 				return InstantiateItem(prefab);
@@ -114,15 +108,6 @@ namespace Praenaris.GUI
 				RecordItemChanges(label);
 			}
 
-			/// <summary>Call after changing a generated item's component, or the prefab instance reverts it when reloaded in Edit Mode.</summary>
-			private static void RecordItemChanges(Component component)
-			{
-				#if UNITY_EDITOR
-				if (!Application.isPlaying)
-					UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(component);
-				#endif
-			}
-
 			private GameObject InstantiateItem(GameObject prefab)
 			{
 				#if UNITY_EDITOR
@@ -132,18 +117,39 @@ namespace Praenaris.GUI
 				return Instantiate(prefab, _outputContainer);
 			}
 
+			/// <summary>Call after changing a generated item's component, or the prefab instance reverts it when reloaded in Edit Mode.</summary>
+			private static void RecordItemChanges(Component component)
+			{
+				#if UNITY_EDITOR
+				if (!Application.isPlaying)
+					UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(component);
+				#endif
+			}
+
 		#endregion
 
 
 		#region Privates - Texts / Fallbacks
 
-			// Every recognized element flushes the paragraph being read before appending itself, so the order is kept
-			private void FlushParagraph()
+			/// <summary>Consecutive lines of the same kind are one block (paragraph, quote...), so a line of another kind ends the current one.</summary>
+			private void AppendBlockLine(GameObject prefab, string elementName, string line)
 			{
-				if (_paragraphLines.IsEmpty()) return;
+				if (elementName != _blockName) {
+					FlushBlock();
+					_blockPrefab = prefab;
+					_blockName = elementName;
+				}
+				if (!line.IsEmpty())
+					_blockLines.Add(line);
+			}
 
-				AppendText(_paragraphPrefab, "paragraph", string.Join(" ", _paragraphLines));	// Consecutive lines are one paragraph
-				_paragraphLines.Clear();
+			/// <summary>Appends the block being read, if any. Every single-line element calls it before appending itself, so the order is kept.</summary>
+			private void FlushBlock()
+			{
+				if (!_blockLines.IsEmpty())
+					AppendText(_blockPrefab, _blockName, string.Join(" ", _blockLines));
+				_blockLines.Clear();
+				_blockName = null;
 			}
 
 		#endregion
