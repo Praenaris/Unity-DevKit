@@ -25,6 +25,25 @@ namespace Praenaris.GUI
 				return true;
 			}
 
+			/// <summary>A paragraph underlined with "===" (heading 1) or "---" (heading 2), of any length and without spaces.</summary>
+			private bool TryParseUnderlinedHeading(string line)
+			{
+				if ((_blockName != ParagraphName) || _blockLines.IsEmpty()) return false;	// Underlining nothing, "---" is a separator and "===" text
+
+				char marker = line[0];
+				if ((marker != '=') && (marker != '-')) return false;
+				foreach (char character in line) {
+					if (character != marker) return false;	// "- - -" is a separator even under a paragraph
+				}
+
+				int level = ((marker == '=') ? 1 : 2);
+				string text = string.Join(" ", _blockLines);
+				_blockLines.Clear();	// The paragraph becomes the heading
+				_blockName = null;
+				AppendText(GetHeadingPrefab(level), $"heading {level}", text);
+				return true;
+			}
+
 			private GameObject GetHeadingPrefab(int level) => level switch {
 				1 => _heading1Prefab,
 				2 => _heading2Prefab,

@@ -10,6 +10,8 @@ namespace Praenaris.GUI
 {
 	public partial class MarkdownLayout : PossumBehaviour
 	{
+		private const string ParagraphName = "paragraph";
+
 		[SerializeField] private TextAsset _inputMarkdown = null;
 		[SerializeField] private Transform _outputContainer = null;
 		[SerializeField] private bool _regenerateOnStart = false;
@@ -32,7 +34,6 @@ namespace Praenaris.GUI
 		[Header("Formatting")]
 		[SerializeField] private GameObject _quotePrefab = null;
 		[SerializeField] private GameObject _separatorPrefab = null;
-
 
 		private readonly List<string> _blockLines = new();	// The lines of the paragraph or quote being read, until something ends it
 		private GameObject _blockPrefab = null;
@@ -60,7 +61,7 @@ namespace Praenaris.GUI
 
 				#if UNITY_EDITOR
 				if (!Application.isPlaying)
-					UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(base.gameObject.scene);	// So the generated items get saved
+					UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(base.gameObject.scene);
 				#endif
 			}
 
@@ -81,14 +82,17 @@ namespace Praenaris.GUI
 						continue;
 					}
 
-					if (TryParseHeading(line) || TryParseSeparator(line) || TryParseImage(line) || TryParseQuote(line)) continue;
-					AppendBlockLine(_paragraphPrefab, "paragraph", line);	// Anything not recognized is part of a paragraph
+					if (TryParseHeading(line)) continue;
+					if (TryParseUnderlinedHeading(line)) continue;	// Before the separator, as "---" under a paragraph is a heading
+					if (TryParseSeparator(line)) continue;
+					if (TryParseImage(line)) continue;
+					if (TryParseQuote(line)) continue;
+					AppendBlockLine(_paragraphPrefab, ParagraphName, line);	// Anything not recognized is a paragraph
 				}
 				FlushBlock();
 			}
 
-			/// <param name="source">The markdown it comes from, for the error log</param>
-			/// <returns>The new item, or null if its prefab isn't assigned (logged as an error)</returns>
+
 			private GameObject AppendItem(GameObject prefab, string elementName, string source)
 			{
 				if (prefab == null) {
@@ -112,12 +116,12 @@ namespace Praenaris.GUI
 			{
 				#if UNITY_EDITOR
 				if (!Application.isPlaying)
-					return (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(prefab, _outputContainer);	// Keeps the prefab link while editing
+					return (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(prefab, _outputContainer);	// Keeps the prefab while on Editor
 				#endif
 				return Instantiate(prefab, _outputContainer);
 			}
 
-			/// <summary>Call after changing a generated item's component, or the prefab instance reverts it when reloaded in Edit Mode.</summary>
+
 			private static void RecordItemChanges(Component component)
 			{
 				#if UNITY_EDITOR
@@ -131,7 +135,6 @@ namespace Praenaris.GUI
 
 		#region Privates - Texts / Fallbacks
 
-			/// <summary>Consecutive lines of the same kind are one block (paragraph, quote...), so a line of another kind ends the current one.</summary>
 			private void AppendBlockLine(GameObject prefab, string elementName, string line)
 			{
 				if (elementName != _blockName) {
@@ -143,7 +146,7 @@ namespace Praenaris.GUI
 					_blockLines.Add(line);
 			}
 
-			/// <summary>Appends the block being read, if any. Every single-line element calls it before appending itself, so the order is kept.</summary>
+
 			private void FlushBlock()
 			{
 				if (!_blockLines.IsEmpty())
