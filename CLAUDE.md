@@ -61,7 +61,7 @@ Consequences:
 - `Runtime/Events/`: `AEventChannelSO` / `EventChannelSO` family (`Int`, `Float`, `String`, `GameObject`, `Transform`, `MonoBehaviour`, `ScriptableObject`).
 - `Runtime/Logging/`: static `Log` (`Info` / `Emphasis` / `Warning` / `Error` / `Exception`, caller name and file stamped via `[CallerMemberName]` / `[CallerFilePath]`), `HLogger`, `ELogLevel`, `ELogSeverity`. Inside a `PossumBehaviour` subclass, bare `Log` resolves to the inherited method, not this class.
 - `Runtime/GUI/`: `Panel<T>`, `Spinbox`, `Cursorman`, selectable helpers, autoselection, parallax, responsive layout, spritesheet player.
-- `Runtime/Mathematics/` (`MathX`, `ColorX`, `SSemanticVersion`, `TransformPoint`, `Randomizers/` with Mersenne Twister and `UnrepeatedRandom`), `Runtime/Databases/` (CSV/TSV `Sheet`, `HeaderedSheet`), `Runtime/Serializables/` (`SerializableKeyValuePair`, `SerializableItemGroup`), `Runtime/Miscellany/` (slideshows, hierarchy separator, define-symbol based destroyers/disablers, `Version`, …), `Runtime/Debugging/`, `Runtime/Networking/`.
+- `Runtime/Mathematics/` (`MathX`, `ColorX`, `TransformPoint`, `Randomizers/` with Mersenne Twister and `UnrepeatedRandom`), `Runtime/Databases/` (CSV/TSV `Sheet`, `HeaderedSheet`), `Runtime/Serializables/` (`SerializableKeyValuePair`, `SerializableItemGroup`), `Runtime/Miscellany/` (slideshows, hierarchy separator, define-symbol based destroyers/disablers, `Version`, `SemanticVersion`, …), `Runtime/Debugging/`, `Runtime/Networking/`.
 - `Editor/Building/` (define togglers, `BuildPropertiesStamper`, `PreloadedAssets`), `Editor/Tools/` (GUID Finder, Scene Git Changes / `SceneDiffTool` (active scene, or the prefab open in Prefab Mode), PlayerPrefs Editor, EventSystem selection indicator, prefs cleaner, troublesome-scale checker, `BuildingPipeline/`), `Editor/GUI/`, `Editor/Importers/` (TSV importer), `Editor/Debugging/`, `Editor/Miscellany/`, `Editor/Serializables/`.
 - Menus: legacy items live under `Tools/Dragon Resonance/` and `Window/Dragon Resonance/`; the newest tool uses `Window/Praenaris/`. New menu items go under `Praenaris`. The define togglers live under `Build/`.
 
@@ -94,7 +94,7 @@ This package is the reference for the maintainer's C# style. Read a whole file b
 - Private/protected fields `_camelCase`, **always explicitly initialized**, even to the default (`= null`, `= 0`, `= false`, `= new()`).
 - Lazy cached backing fields take an `_x_internal` suffix and are read only through their property: `public CanvasGroup CanvasGroup => (_canvasGroup_internal = GetComponentIfNull(_canvasGroup_internal));`. In an `EditorWindow` or other serialized Editor class, mark these caches `[NonSerialized]`, or a domain reload brings them back as empty non-null instances.
 - Read own members through `this.` (`this.CanvasGroup`, `this.transform`) and base members through `base.` (`base.transform`, `base.serializedObject`).
-- Type prefixes: `A` abstract (`AEventChannelSO`), `E` enum (`ELogLevel`), `S` serializable struct (`SSemanticVersion`, `SBuildConfiguration`), `I` interface.
+- Type prefixes: `A` abstract (`AEventChannelSO`), `E` enum (`ELogLevel`), `S` serializable struct (`SBuildConfiguration`), `I` interface.
 - **Explicit types, never `var`.**
 - `[SerializeField] private T _field = null;` on one line; extra attributes stack on the same line. `[ContextMenu(nameof(Method))]` for methods worth invoking from the Inspector.
 - English everywhere.
