@@ -13,6 +13,7 @@ namespace DragonResonance.Extensions
 			public static bool IsNegative(this int testValue) => (testValue < 0);
 			public static bool IsNegativeOrZero(this int testValue) => (testValue <= 0);
 			public static bool IsZero(this int testValue) => (testValue == 0);
+			public static bool IsNotZero(this int testValue) => !IsZero(testValue);
 
 			public static bool IsEven(this int testValue) => ((testValue & 1) == 0);
 			public static bool IsOdd(this int testValue) => !IsEven(testValue);
