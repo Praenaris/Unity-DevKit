@@ -58,6 +58,14 @@ namespace DragonResonance.GUI
 				Play();
 			}
 
+
+			public void SetSequence(SpriteSequence sequence) => SetSequence(sequence.Sprites);
+			public void SetSequence(IEnumerable<Sprite> sprites)
+			{
+				this.Sprites.Clear();
+				this.Sprites.AddRange(sprites);
+			}
+
 		#endregion
 
 
