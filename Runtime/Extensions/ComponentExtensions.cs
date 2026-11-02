@@ -14,6 +14,29 @@ namespace Praenaris.Extensions
 			public static T GetComponentInParentIfNull<T>(this Component component, T statement, bool includeInactive = true) where T : Component =>
 				((statement == null) ? component.GetComponentInParent<T>(includeInactive) : statement);
 
+			public static bool CanBeEnabled(this Component component) =>
+				(component is Behaviour or Collider or LODGroup or Renderer);
+
+			public static bool TrySetEnabled(this Component component, bool enabled)
+			{
+				switch (component) {
+					case Behaviour behaviour:
+						behaviour.enabled = enabled;
+						return true;
+					case Collider collider:
+						collider.enabled = enabled;
+						return true;
+					case LODGroup lodGroup:
+						lodGroup.enabled = enabled;
+						return true;
+					case Renderer renderer:
+						renderer.enabled = enabled;
+						return true;
+					default:
+						return false;
+				}
+			}
+
 		#endregion
 	}
 }
