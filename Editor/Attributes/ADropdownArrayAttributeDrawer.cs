@@ -2,6 +2,7 @@
 
 
 using DragonResonance.Extensions;
+using System.Linq;
 using System;
 using UnityEditor;
 using UnityEngine;
@@ -11,30 +12,64 @@ namespace DragonResonance.Editor.Attributes
 {
 	public class ADropdownArrayAttributeDrawer : PropertyDrawer
 	{
-		protected virtual string[] GetItems(SerializedProperty property) => Array.Empty<string>();	// The method to override and retrieve the items
+		[NonSerialized] private string[] _cachedItems = null;
+		[NonSerialized] private GUIContent[] _cachedOptions = null;
 
-		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-		{
-			string[] items = GetItems(property);
 
-			if (items.Length.IsZero()) {
-				EditorGUI.HelpBox(position, $"{this.GetType().Name} has zero items", MessageType.Warning);
-				return;
-			}
+		#region Events
 
-			EditorGUI.BeginProperty(position, label, property);
+			public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 			{
-				int selectedIndex;
-				EditorGUI.BeginChangeCheck();
-				{
-					int currentIndex = Mathf.Max(0, Array.IndexOf(items, property.stringValue));
-					selectedIndex = EditorGUI.Popup(position, label.text, currentIndex, items);
+				if (property.propertyType != SerializedPropertyType.String) {
+					EditorGUI.HelpBox(position, $"{base.attribute.GetType().Name} works just on strings.", MessageType.Error);
+					return;
 				}
-				if (EditorGUI.EndChangeCheck())
-					property.stringValue = items[selectedIndex];
+
+				string[] items = GetItems(property);
+				label = new GUIContent(EditorGUI.BeginProperty(position, label, property));	// A copy, the given label is shared with other fields
+				{
+					int currentIndex = Array.IndexOf(items, property.stringValue);
+					if (currentIndex.IsNegative()) {	// Kept and shown as is, instead of passing off the first item as the value
+						label.image = EditorGUIUtility.IconContent("console.warnicon.sml").image;
+						label.tooltip = (items.IsEmpty() ? "No items to choose from." : "Not one of the items.");
+					}
+
+					GUIContent[] options = GetOptions(items);
+					if (currentIndex.IsNegative())
+						options = options.Prepend(new GUIContent(property.stringValue)).ToArray();
+
+					EditorGUI.BeginChangeCheck();
+					int selectedIndex = EditorGUI.Popup(position, label, currentIndex.LowerClamp(0), options);
+					if (EditorGUI.EndChangeCheck())
+						property.stringValue = items[(currentIndex.IsNegative() ? (selectedIndex - 1) : selectedIndex).LowerClamp(0)];
+				}
+				EditorGUI.EndProperty();
 			}
-			EditorGUI.EndProperty();
-		}
+
+		#endregion
+
+
+		#region Inheritables
+
+			protected virtual string[] GetItems(SerializedProperty property) => Array.Empty<string>();	// The method to override and retrieve the items
+			protected virtual string GetItemLabel(string item) => item;	// Slashes nest the item into submenus
+
+		#endregion
+
+
+		#region Privates
+
+			private GUIContent[] GetOptions(string[] items)
+			{
+				if (!ReferenceEquals(items, _cachedItems)) {	// Rebuilt only when the drawer hands out a different array
+					_cachedItems = items;
+					_cachedOptions = items.Select(item => new GUIContent(GetItemLabel(item))).ToArray();
+				}
+
+				return _cachedOptions;
+			}
+
+		#endregion
 	}
 }
 
@@ -42,19 +77,15 @@ namespace DragonResonance.Editor.Attributes
 #endif
 
 
-/*       ________________________________________________________________       */
-/*           _________   _______ ________  _______  _______  ___    _           */
-/*           |        \ |______/ |______| |  _____ |       | |  \   |           */
-/*           |________/ |     \_ |      | |______| |_______| |   \__|           */
-/*           ______ _____ _____ _____ __   _ _____ __   _ _____ _____           */
-/*           |____/ |____ [___  |   | | \  | |___| | \  | |     |____           */
-/*           |    \ |____ ____] |___| |  \_| |   | |  \_| |____ |____           */
-/*       ________________________________________________________________       */
-/*                                                                              */
-/*           David Tabernero M.  <https://github.com/davidtabernerom>           */
-/*           Dragon Resonance    <https://github.com/dragonresonance>           */
-/*                  Copyright © 2021-2026. All rights reserved.                 */
-/*                Licensed under the Apache License, Version 2.0.               */
-/*                         See LICENSE.md for more info.                        */
-/*       ________________________________________________________________       */
-/*                                                                              */
+/*                                                                                                                */
+/*       `7MM"""Mq.`7MM"""Mq.       db     `7MM"""YMM  `7MN.   `7MF'     db     `7MM"""Mq. `7MMF' .M"""bgd        */
+/*         MM   `MM. MM   `MM.     ;MM:      MM    `7    MMN.    M      ;MM:      MM   `MM.  MM  ,MI    "Y        */
+/*         MM   ,M9  MM   ,M9     ,V^MM.     MM   d      M YMb   M     ,V^MM.     MM   ,M9   MM  `MMb.            */
+/*         MMmmdM9   MMmmdM9     ,M  `MM     MMmmMM      M  `MN. M    ,M  `MM     MMmmdM9    MM    `YMMNq.        */
+/*         MM        MM  YM.     AbmmmqMA    MM   Y  ,   M   `MM.M    AbmmmqMA    MM  YM.    MM  .     `MM        */
+/*         MM        MM   `Mb.  A'     VML   MM     ,M   M     YMM   A'     VML   MM   `Mb.  MM  Mb     dM        */
+/*       .JMML.    .JMML. .JMM.AMA.   .AMMA.JMMmmmmMMM .JML.    YM .AMA.   .AMMA.JMML. .JMM.JMML.P"Ybmmd"         */
+/*                                                                                                                */
+/*                 Licensed under the Apache License, Version 2.0.  See LICENSE.md for more info.                 */
+/*                                     Copyright © 2026. All rights reserved.                                     */
+/*                                                                                                                */
