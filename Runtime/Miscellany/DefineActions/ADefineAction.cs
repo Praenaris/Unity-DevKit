@@ -11,7 +11,7 @@ namespace Praenaris.Miscellany
 	public abstract class ADefineAction<T> : PossumBehaviour where T : UnityObject
 	{
 		[SerializeField] private DefineCondition _condition = DefineCondition.AnyDefined;
-		[DefineSymbol] [SerializeField] private string[] _symbols = { };
+		[DefineSymbol] [SerializeField] private string[] _symbols = { "DEMO_BUILD" };
 		[SerializeField] private T[] _targets = { };
 
 
