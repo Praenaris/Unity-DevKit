@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
@@ -21,10 +22,17 @@ namespace DragonResonance.Behaviours
 				Destroy(gameObject);
 			}
 
-			public static void DestroyChildren(Transform container)
+			public static void DestroyChildren(Transform container) =>
+				DestroyChildren(container, Array.Empty<Transform>());
+			public static void DestroyChildren(Transform container, IEnumerable<GameObject> preservedChildren) =>
+				DestroyChildren(container, preservedChildren.Where(child => (child != null)).Select(child => child.transform));
+			public static void DestroyChildren(Transform container, IEnumerable<Transform> preservedChildren)
 			{
+				HashSet<Transform> preserved = new(preservedChildren);
 				for (int childIndex = container.childCount - 1; childIndex >= 0; childIndex--) {
-					DestroyDynamically(container.GetChild(childIndex).gameObject);
+					Transform child = container.GetChild(childIndex);
+					if (!preserved.Contains(child))
+						DestroyDynamically(child.gameObject);
 				}
 			}
 

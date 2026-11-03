@@ -30,7 +30,9 @@ namespace DragonResonance.Behaviours
 			protected T FindComponentIfNull<T>(T statement, FindObjectsInactive includeInactive) where T : Component =>
 				((statement == null) ? FindAnyObjectByType<T>(includeInactive) : statement);
 
-			protected void DestroyChildren() => DestroyChildren(this.transform);
+			protected void DestroyChildren() => PossumBehaviour.DestroyChildren(this.transform);
+			protected void DestroyChildren(IEnumerable<GameObject> preservedChildren) => PossumBehaviour.DestroyChildren(this.transform, preservedChildren);
+			protected void DestroyChildren(IEnumerable<Transform> preservedChildren) => PossumBehaviour.DestroyChildren(this.transform, preservedChildren);
 
 		#endregion
 
