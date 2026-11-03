@@ -26,6 +26,8 @@ namespace DragonResonance.Behaviours
 				((statement == null) ? FindAnyObjectByType<T>(includeInactive) : statement);
 
 			protected void DestroyChildren() => DestroyChildren(this.transform);
+			protected void DestroyChildren(IEnumerable<GameObject> preservedChildren) => DestroyChildren(this.transform, preservedChildren);
+			protected void DestroyChildren(IEnumerable<Transform> preservedChildren) => DestroyChildren(this.transform, preservedChildren);
 
 		#endregion
 
