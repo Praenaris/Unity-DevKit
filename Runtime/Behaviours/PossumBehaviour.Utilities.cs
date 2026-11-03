@@ -24,8 +24,12 @@ namespace DragonResonance.Behaviours
 
 			public static void DestroyChildren(Transform container) =>
 				DestroyChildren(container, Array.Empty<Transform>());
+			public static void DestroyChildren(Transform container, GameObject preservedChild) =>
+				DestroyChildren(container, preservedChild.transform);
+			public static void DestroyChildren(Transform container, Transform preservedChild) =>
+				DestroyChildren(container, new[] { preservedChild });
 			public static void DestroyChildren(Transform container, IEnumerable<GameObject> preservedChildren) =>
-				DestroyChildren(container, preservedChildren.Where(child => (child != null)).Select(child => child.transform));
+				DestroyChildren(container, preservedChildren.Select(child => child.transform));
 			public static void DestroyChildren(Transform container, IEnumerable<Transform> preservedChildren)
 			{
 				HashSet<Transform> preserved = new(preservedChildren);
