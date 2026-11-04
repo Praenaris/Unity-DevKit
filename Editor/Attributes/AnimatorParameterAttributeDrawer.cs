@@ -2,7 +2,7 @@
 
 
 using DragonResonance.Attributes;
-using DragonResonance.Extensions;
+using Praenaris.Editor.Extensions;
 using System.Linq;
 using System;
 using UnityEditor.Animations;
@@ -20,7 +20,7 @@ namespace DragonResonance.Editor.Attributes
 			protected override string[] GetItems(SerializedProperty property)
 			{
 				string animatorFieldName = ((AnimatorParameterAttribute)base.attribute).AnimatorFieldName;
-				SerializedProperty animatorProperty = FindSiblingProperty(property, animatorFieldName);
+				SerializedProperty animatorProperty = property.FindSiblingProperty(animatorFieldName);
 				if ((animatorProperty == null) || !(animatorProperty.objectReferenceValue is Animator animator)) return Array.Empty<string>();
 
 				AnimatorController controller = GetController(animator.runtimeAnimatorController);	// Read from the asset, an Animator lists no parameters until it plays
@@ -39,17 +39,6 @@ namespace DragonResonance.Editor.Attributes
 				AnimatorController controller => controller,
 				_ => null,
 			};
-
-			private static SerializedProperty FindSiblingProperty(SerializedProperty property, string siblingName)
-			{
-				string path = property.propertyPath;
-				int arrayIndex = path.LastIndexOf(".Array.data[", StringComparison.Ordinal);
-				if (arrayIndex.IsPositiveOrZero())
-					path = path.Substring(0, arrayIndex);	// An array element looks next to its array
-
-				int separatorIndex = path.LastIndexOf('.');
-				return property.serializedObject.FindProperty(separatorIndex.IsNegative() ? siblingName : $"{path.Substring(0, (separatorIndex + 1))}{siblingName}");
-			}
 
 		#endregion
 	}
