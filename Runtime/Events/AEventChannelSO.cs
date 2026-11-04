@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Praenaris.Events
 {
-	public class AEventChannelSO<T> : ScriptableObject
+	public abstract class AEventChannelSO<T> : ScriptableObject
 	{
 		private T _latestValue = default;
 
@@ -16,7 +16,12 @@ namespace Praenaris.Events
 			OnEventRaised = null;
 		}
 
-		public void RaiseEvent(T data) => OnEventRaised?.Invoke(_latestValue = data);
+		public void RaiseEvent() => RaiseEvent(_latestValue);
+		public void RaiseEvent(T data)
+		{
+			_latestValue = data;
+			OnEventRaised?.Invoke(data);
+		}
 
 		public T LatestValue => _latestValue;
 	}
