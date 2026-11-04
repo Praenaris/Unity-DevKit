@@ -2,47 +2,27 @@
 
 
 using DragonResonance.Attributes;
+using Praenaris.Editor.Attributes;
 using UnityEditor;
-using UnityEngine;
-
-
 
 
 namespace DragonResonance.Editor.Attributes
 {
 	[CustomPropertyDrawer(typeof(ShowIfAttribute))]
-	public class ShowIfAttributeDrawer : PropertyDrawer
+	public class ShowIfAttributeDrawer : AConditionalAttributeDrawer
 	{
-		private bool ShouldShow(SerializedProperty property)
-		{
-			ShowIfAttribute conditionAttribute = (ShowIfAttribute)base.attribute;
-			string conditionPath = conditionAttribute.ConditionFieldName;
+		#region Inheritables
 
-			string thisPropertyPath = property.propertyPath;
-			int lastPropertySeparatorIndex = thisPropertyPath.LastIndexOf('.');
-			if (lastPropertySeparatorIndex > 0) {
-				string containerPath = thisPropertyPath.Substring(0, lastPropertySeparatorIndex + 1);
-				conditionPath = containerPath + conditionAttribute.ConditionFieldName;
-			}
+			protected override bool IsVisibleWhen(bool condition) => condition;
 
-			SerializedProperty conditionProperty = property.serializedObject.FindProperty(conditionPath);
-			if (conditionProperty == null || conditionProperty.type != "bool")
-				return true;
-			else
-				return conditionProperty.boolValue;
-		}
+		#endregion
 
-		public override float GetPropertyHeight(SerializedProperty property, GUIContent label) {
-			if (ShouldShow(property))
-				return EditorGUI.GetPropertyHeight(property, label, true);
-			else
-				return -EditorGUIUtility.standardVerticalSpacing;
-		}
 
-		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
-			if(ShouldShow(property))
-				EditorGUI.PropertyField(position, property, label, true);
-		}
+		#region Properties
+
+			protected override string ConditionFieldName => ((ShowIfAttribute)base.attribute).ConditionFieldName;
+
+		#endregion
 	}
 }
 
@@ -50,24 +30,15 @@ namespace DragonResonance.Editor.Attributes
 #endif
 
 
-
-
-/*                                                                              */
-/*  |>  Based on the script of DMGregory @ Game Development Stack Exchange. <|  */
-/*                                                                              */
-/*       ________________________________________________________________       */
-/*           _________   _______ ________  _______  _______  ___    _           */
-/*           |        \ |______/ |______| |  _____ |       | |  \   |           */
-/*           |________/ |     \_ |      | |______| |_______| |   \__|           */
-/*           ______ _____ _____ _____ __   _ _____ __   _ _____ _____           */
-/*           |____/ |____ [___  |   | | \  | |___| | \  | |     |____           */
-/*           |    \ |____ ____] |___| |  \_| |   | |  \_| |____ |____           */
-/*       ________________________________________________________________       */
-/*                                                                              */
-/*           David Tabernero M.  <https://github.com/davidtabernerom>           */
-/*           Dragon Resonance    <https://github.com/dragonresonance>           */
-/*                  Copyright © 2021-2026. All rights reserved.                 */
-/*                Licensed under the Apache License, Version 2.0.               */
-/*                         See LICENSE.md for more info.                        */
-/*       ________________________________________________________________       */
-/*                                                                              */
+/*                                                                                                                */
+/*       `7MM"""Mq.`7MM"""Mq.       db     `7MM"""YMM  `7MN.   `7MF'     db     `7MM"""Mq. `7MMF' .M"""bgd        */
+/*         MM   `MM. MM   `MM.     ;MM:      MM    `7    MMN.    M      ;MM:      MM   `MM.  MM  ,MI    "Y        */
+/*         MM   ,M9  MM   ,M9     ,V^MM.     MM   d      M YMb   M     ,V^MM.     MM   ,M9   MM  `MMb.            */
+/*         MMmmdM9   MMmmdM9     ,M  `MM     MMmmMM      M  `MN. M    ,M  `MM     MMmmdM9    MM    `YMMNq.        */
+/*         MM        MM  YM.     AbmmmqMA    MM   Y  ,   M   `MM.M    AbmmmqMA    MM  YM.    MM  .     `MM        */
+/*         MM        MM   `Mb.  A'     VML   MM     ,M   M     YMM   A'     VML   MM   `Mb.  MM  Mb     dM        */
+/*       .JMML.    .JMML. .JMM.AMA.   .AMMA.JMMmmmmMMM .JML.    YM .AMA.   .AMMA.JMML. .JMM.JMML.P"Ybmmd"         */
+/*                                                                                                                */
+/*                 Licensed under the Apache License, Version 2.0.  See LICENSE.md for more info.                 */
+/*                                     Copyright © 2026. All rights reserved.                                     */
+/*                                                                                                                */
