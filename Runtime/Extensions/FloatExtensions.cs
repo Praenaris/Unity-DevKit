@@ -12,11 +12,11 @@ namespace DragonResonance.Extensions
 			public static bool IsNegative(this float testValue) => (testValue < 0f);
 			public static bool IsNegativeOrZero(this float testValue) => (testValue <= 0f);
 
-			public static bool IsBetween(this float testValue, int minInclusive, int maxExclusive) =>
+			public static bool IsBetween(this float testValue, float minInclusive, float maxExclusive) =>
 				((testValue >= minInclusive) && (testValue < maxExclusive));
-			public static bool IsBetweenInclusive(this float testValue, int minInclusive, int maxInclusive) =>
+			public static bool IsBetweenInclusive(this float testValue, float minInclusive, float maxInclusive) =>
 				((testValue >= minInclusive) && (testValue <= maxInclusive));
-			public static bool IsBetweenExclusive(this float testValue, int minExclusive, int maxExclusive) =>
+			public static bool IsBetweenExclusive(this float testValue, float minExclusive, float maxExclusive) =>
 				((testValue > minExclusive) && (testValue < maxExclusive));
 
 			public static bool IsApproximately(this float source, float value) =>
