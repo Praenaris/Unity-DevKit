@@ -3,43 +3,52 @@ using System.Linq;
 using System;
 
 
-
-
 namespace DragonResonance.Extensions
 {
 	public static class IEnumerableExtensions
 	{
-		#region Verification
+		#region Publics - Verification
 
+			public static bool IsEmpty<T>(this IEnumerable<T> enumerable) => enumerable switch {
+				ICollection<T> collection => (collection.Count == 0),
+				IReadOnlyCollection<T> readOnlyCollection => (readOnlyCollection.Count == 0),
+				_ => !enumerable.Any(),
+			};
 
-			public static bool IsEmpty<T>(this IEnumerable<T> enumerable)
+			public static int LastIndex<T>(this IEnumerable<T> enumerable) => enumerable switch {
+				ICollection<T> collection => (collection.Count - 1),
+				IReadOnlyCollection<T> readOnlyCollection => (readOnlyCollection.Count - 1),
+				_ => (enumerable.Count() - 1),
+			};
+
+			public static bool IsLastItem<T>(this IEnumerable<T> enumerable, T item) => IsLastItem(enumerable, item, EqualityComparer<T>.Default);
+			public static bool IsLastItem<T>(this IEnumerable<T> enumerable, T item, IEqualityComparer<T> comparer)
 			{
-				return enumerable switch {
-					ICollection<T> collection => (collection.Count == 0),
-					IReadOnlyCollection<T> readOnly => (readOnly.Count == 0),
-					_ => !enumerable.Any()
-				};
+				if (enumerable is IList<T> list)
+					return (list.Count.IsNotZero() && comparer.Equals(list[^1], item));
+				if (enumerable is IReadOnlyList<T> readOnlyList)
+					return (readOnlyList.Count.IsNotZero() && comparer.Equals(readOnlyList[^1], item));
+
+				//	Only walked when it can't be indexed
+				bool hasItems = false;
+				T lastItem = default;
+				foreach (T currentItem in enumerable) {
+					hasItems = true;
+					lastItem = currentItem;
+				}
+				return (hasItems && comparer.Equals(lastItem, item));
 			}
 
-			public static int LastIndex<T>(this IEnumerable<T> enumerable)
-			{
-				return enumerable switch {
-					ICollection<T> collection => (collection.Count - 1),
-					IReadOnlyCollection<T> readOnly => (readOnly.Count - 1),
-					_ => (enumerable.Count() - 1)
-				};
-			}
+		#endregion
 
 
-			public static T FirstMatch<T>(this IEnumerable<T> contentEnumerable, IEnumerable<T> containerEnumerable)
-			{
-				HashSet<T> containerSet = containerEnumerable.ToHashSet();
-				return contentEnumerable.FirstOrDefault(item => containerSet.Contains(item));
-			}
+		#region Publics - Matching
 
+			public static T FirstMatch<T>(this IEnumerable<T> contentEnumerable, IEnumerable<T> containerEnumerable) =>
+				FirstMatchOrFallback(contentEnumerable, containerEnumerable, default);
 			public static T FirstMatchOrFallback<T>(this IEnumerable<T> contentEnumerable, IEnumerable<T> containerEnumerable, T fallback)
 			{
-				HashSet<T> container = containerEnumerable.ToHashSet();
+				HashSet<T> container = new(containerEnumerable);
 				foreach (T item in contentEnumerable)
 					if (container.Contains(item))
 						return item;
@@ -49,87 +58,66 @@ namespace DragonResonance.Extensions
 
 			public static bool MatchesAny<T>(this IEnumerable<T> enumerableA, IEnumerable<T> enumerableB)
 			{
-				T[] arrayA = enumerableA.ToArray();
-				T[] arrayB = enumerableB.ToArray();
-				return arrayB.Any(bValue => arrayA.Contains(bValue));
+				HashSet<T> setA = new(enumerableA);
+				return enumerableB.Any(setA.Contains);
 			}
 
 			public static int Matches<T>(this IEnumerable<T> enumerableA, IEnumerable<T> enumerableB)
 			{
-				T[] arrayA = enumerableA.ToArray();
-				T[] arrayB = enumerableB.ToArray();
-				return arrayB.Count(bValue => arrayA.Contains(bValue));
+				HashSet<T> setA = new(enumerableA);
+				return enumerableB.Count(setA.Contains);
 			}
-
 
 		#endregion
 
 
+		#region Publics - Searching
 
-
-		#region Searching
-
-
-			public static int IndexOf<T>(this IEnumerable<T> enumerable, T value)
-			{
-				return IndexOf(enumerable, value, EqualityComparer<T>.Default);
-			}
-
-
-			public static int IndexOf<T>(this IEnumerable<T> enumerable, T value, EqualityComparer<T> comparer)
+			public static int IndexOf<T>(this IEnumerable<T> enumerable, T value) => IndexOf(enumerable, value, EqualityComparer<T>.Default);
+			public static int IndexOf<T>(this IEnumerable<T> enumerable, T value, IEqualityComparer<T> comparer)
 			{
 				int index = 0;
-
 				foreach (T item in enumerable) {
-					if (comparer.Equals(item, value)) {
-						return index;
-					}
+					if (comparer.Equals(item, value)) return index;
 					index++;
 				}
 
 				return -1;
 			}
 
-
 			public static int IndexOf<T>(this IEnumerable<T> source, IEnumerable<T> match)
 			{
 				T[] sourceArray = source.ToArray();
-				T[] matchArray = match.ToArray();
-
-				foreach (T matchItem in matchArray) {
-					int index = sourceArray.IndexOf(matchItem);
-					if (index != -1) return index;
+				foreach (T matchItem in match) {
+					int index = Array.IndexOf(sourceArray, matchItem);
+					if (index.IsPositiveOrZero()) return index;
 				}
 
 				return -1;
 			}
 
-
 		#endregion
 
 
-
-
-		#region Iteration
-
+		#region Publics - Iteration
 
 			public static int RandomIndex<T>(this IEnumerable<T> enumerable) => UnityEngine.Random.Range(0, enumerable.Count());
 
 			public static T Random<T>(this IEnumerable<T> enumerable)
 			{
-				IEnumerable<T> array = enumerable as T[] ?? enumerable.ToArray();
-				return array.ElementAt(UnityEngine.Random.Range(0, array.Count()));
+				IList<T> list = ((enumerable as IList<T>) ?? enumerable.ToArray());	// Lists and arrays are not copied
+				return list[UnityEngine.Random.Range(0, list.Count)];
 			}
-
 
 			public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> enumerable)
 			{
-				return enumerable
-					.Select(item => (item, key: UnityEngine.Random.value))
-					.OrderBy(itemTuple => itemTuple.key)
-					.Select(itemTuple => itemTuple.item);
+				T[] items = enumerable.ToArray();
+				for (int itemIndex = (items.Length - 1); itemIndex.IsPositiveOrZero(); itemIndex--) {	// Fisher-Yates, yielding as it goes
+					int pickedIndex = UnityEngine.Random.Range(0, (itemIndex + 1));
+					yield return items[pickedIndex];
+					items[pickedIndex] = items[itemIndex];
+				}
 			}
-
 
 			public static void ForEach<T>(this IEnumerable<T> enumerable, Action<T> action)
 			{
@@ -137,27 +125,20 @@ namespace DragonResonance.Extensions
 					action(item);
 			}
 
-
 		#endregion
 	}
 }
 
 
-
-
-/*       ________________________________________________________________       */
-/*           _________   _______ ________  _______  _______  ___    _           */
-/*           |        \ |______/ |______| |  _____ |       | |  \   |           */
-/*           |________/ |     \_ |      | |______| |_______| |   \__|           */
-/*           ______ _____ _____ _____ __   _ _____ __   _ _____ _____           */
-/*           |____/ |____ [___  |   | | \  | |___| | \  | |     |____           */
-/*           |    \ |____ ____] |___| |  \_| |   | |  \_| |____ |____           */
-/*       ________________________________________________________________       */
-/*                                                                              */
-/*           David Tabernero M.  <https://github.com/davidtabernerom>           */
-/*           Dragon Resonance    <https://github.com/dragonresonance>           */
-/*                  Copyright © 2021-2026. All rights reserved.                 */
-/*                Licensed under the Apache License, Version 2.0.               */
-/*                         See LICENSE.md for more info.                        */
-/*       ________________________________________________________________       */
-/*                                                                              */
+/*                                                                                                                */
+/*       `7MM"""Mq.`7MM"""Mq.       db     `7MM"""YMM  `7MN.   `7MF'     db     `7MM"""Mq. `7MMF' .M"""bgd        */
+/*         MM   `MM. MM   `MM.     ;MM:      MM    `7    MMN.    M      ;MM:      MM   `MM.  MM  ,MI    "Y        */
+/*         MM   ,M9  MM   ,M9     ,V^MM.     MM   d      M YMb   M     ,V^MM.     MM   ,M9   MM  `MMb.            */
+/*         MMmmdM9   MMmmdM9     ,M  `MM     MMmmMM      M  `MN. M    ,M  `MM     MMmmdM9    MM    `YMMNq.        */
+/*         MM        MM  YM.     AbmmmqMA    MM   Y  ,   M   `MM.M    AbmmmqMA    MM  YM.    MM  .     `MM        */
+/*         MM        MM   `Mb.  A'     VML   MM     ,M   M     YMM   A'     VML   MM   `Mb.  MM  Mb     dM        */
+/*       .JMML.    .JMML. .JMM.AMA.   .AMMA.JMMmmmmMMM .JML.    YM .AMA.   .AMMA.JMML. .JMM.JMML.P"Ybmmd"         */
+/*                                                                                                                */
+/*                 Licensed under the Apache License, Version 2.0.  See LICENSE.md for more info.                 */
+/*                                     Copyright © 2026. All rights reserved.                                     */
+/*                                                                                                                */
