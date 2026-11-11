@@ -28,6 +28,11 @@
             "name": "com.unity.netcode.gameobjects",
             "expression": "",
             "define": "UNITY_NGO"
+        },
+        {
+            "name": "com.unity.ugui",
+            "expression": "",
+            "define": "TEXTMESHPRO"
         }
     ],
     "noEngineReferences": false
