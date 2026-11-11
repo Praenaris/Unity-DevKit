@@ -36,6 +36,7 @@ namespace Praenaris.Miscellany
 				};
 			}
 
+			protected override Vector2 GetLocalCenter() => _area.center;
 			protected override bool ContainsLocal(Vector2 localPoint) => _area.Contains(localPoint);
 			protected override Vector2 ClosestLocalPoint(Vector2 localPoint) =>
 				new(Mathf.Clamp(localPoint.x, _area.xMin, _area.xMax), Mathf.Clamp(localPoint.y, _area.yMin, _area.yMax));

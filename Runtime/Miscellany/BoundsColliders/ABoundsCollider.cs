@@ -48,6 +48,7 @@ namespace Praenaris.Miscellany
 		#region Inheritables
 
 			protected abstract Vector2[] GetWallLine(float wallRadius);	// Closed, through the middle of the walls, in local space
+			protected abstract Vector2 GetLocalCenter();
 			protected abstract bool ContainsLocal(Vector2 localPoint);
 			protected abstract Vector2 ClosestLocalPoint(Vector2 localPoint);	// The point itself when it is inside
 			protected abstract Vector2 RandomLocalPoint();
@@ -74,6 +75,7 @@ namespace Praenaris.Miscellany
 
 		#region Properties
 
+			public Vector2 Center => ToWorld(GetLocalCenter());
 			public float Thickness { get => _thickness; set { _thickness = value.LowerClamp(0.001f); Rebuild(); } }
 			public EdgeCollider2D EdgeCollider => (_edgeCollider_internal = GetComponentIfNull(_edgeCollider_internal));
 

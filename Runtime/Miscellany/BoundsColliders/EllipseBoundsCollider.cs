@@ -43,6 +43,8 @@ namespace Praenaris.Miscellany
 				return points;
 			}
 
+			protected override Vector2 GetLocalCenter() => _area.center;
+
 			protected override bool ContainsLocal(Vector2 localPoint)
 			{
 				Vector2 radii = this.Radii;
