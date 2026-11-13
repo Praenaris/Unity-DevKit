@@ -98,6 +98,7 @@ This package is the reference for the maintainer's C# style. Read a whole file b
 - **Explicit types, never `var`.**
 - `[SerializeField] private T _field = null;` on one line; extra attributes stack on the same line. `[ContextMenu(nameof(Method))]` for methods worth invoking from the Inspector.
 - English everywhere.
+- **No UniTask in the package**: async code uses `System.Threading.Tasks` (and Unity's `Awaitable` where a frame/main-thread wait is needed). UniTask is fine in consuming projects, not here.
 
 **File skeleton**: (`#if UNITY_EDITOR` + two blank lines, for Editor files) → usings → two blank lines → `namespace` block → two blank lines → (`#endif` + two blank lines, for Editor files) → the **PRAENARIS Apache copyright notice**, ending with **no newline** after its last line.
 - **Every code file carries the PRAENARIS notice**, no exceptions: new files get it, and a file being edited that lacks it or still has another one gets it then. Two older variants exist and must be replaced whenever their file is touched: the `DRAGON RESONANCE` ASCII-art footer ("Copyright © 2021-2026") and, in `Runtime/Networking/NetworkPhysicsRigidbody.cs`, a `Proto√olKers` notice. A file with no notice at all gets one added.
