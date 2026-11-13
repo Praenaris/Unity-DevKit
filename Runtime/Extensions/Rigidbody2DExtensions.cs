@@ -10,6 +10,12 @@ namespace Praenaris.Extensions
 			public static void Translate(this Rigidbody2D source, Vector2 translation) =>
 				source.MovePosition(source.position + translation);
 
+			public static void TeleportPhysically(this Rigidbody2D source, Vector2 position)
+			{
+				source.position = position;
+				source.transform.position = position;
+			}
+
 		#endregion
 
 
