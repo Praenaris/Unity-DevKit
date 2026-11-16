@@ -13,6 +13,7 @@ namespace Praenaris.Editor.Attributes
 	public abstract class AComboBoxAttributeDrawer : PropertyDrawer
 	{
 		private const float DROPDOWN_BUTTON_WIDTH = 19f;
+		private const float WARNING_ICON_WIDTH = 18f;
 
 
 		#region Events
@@ -25,19 +26,22 @@ namespace Praenaris.Editor.Attributes
 				}
 
 				string[] items = GetItems(property).Where(item => !string.IsNullOrEmpty(item)).Distinct().ToArray();
-				label = new GUIContent(EditorGUI.BeginProperty(position, label, property));	// A copy, the given label is shared with other fields
-				if (!string.IsNullOrEmpty(property.stringValue) && !items.Contains(property.stringValue)) {
-					label.image = EditorGUIUtility.IconContent("console.warnicon.sml").image;
-					label.tooltip = this.UnknownItemTooltip;
-				}
+				label = EditorGUI.BeginProperty(position, label, property);
+				string value = property.stringValue;
+				bool showsWarning = (!string.IsNullOrEmpty(value) && !items.Any(item => value.Contains(item)));	// Anything around a valid item is fine
+				float warningWidth = (showsWarning ? WARNING_ICON_WIDTH : 0f);
 
-				Rect textField = new(position.x, position.y, (position.width - DROPDOWN_BUTTON_WIDTH), position.height);
-				Rect dropdownButton = new(textField.xMax, position.y, DROPDOWN_BUTTON_WIDTH, position.height);
+				Rect textField = new(position.x, position.y, (position.width - warningWidth - DROPDOWN_BUTTON_WIDTH), position.height);
+				Rect warningIcon = new(textField.xMax, position.y, warningWidth, position.height);
+				Rect dropdownButton = new(warningIcon.xMax, position.y, DROPDOWN_BUTTON_WIDTH, position.height);
 
 				EditorGUI.BeginChangeCheck();
-				string newValue = EditorGUI.DelayedTextField(textField, label, property.stringValue);
+				string newValue = EditorGUI.DelayedTextField(textField, label, value);
 				if (EditorGUI.EndChangeCheck())
 					property.stringValue = newValue.Trim();
+
+				if (showsWarning)
+					EditorGUI.LabelField(warningIcon, new GUIContent(EditorGUIUtility.IconContent("console.warnicon.sml").image, this.UnknownItemTooltip));
 
 				if (EditorGUI.DropdownButton(dropdownButton, GUIContent.none, FocusType.Passive))
 					ShowMenu(dropdownButton, property, items);
@@ -84,7 +88,7 @@ namespace Praenaris.Editor.Attributes
 
 		#region Properties
 
-			protected virtual string UnknownItemTooltip => "Not one of the suggested items.";
+			protected virtual string UnknownItemTooltip => "None of the suggested items is in the text.";
 
 		#endregion
 	}
