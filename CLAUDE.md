@@ -94,7 +94,7 @@ This package is the reference for the maintainer's C# style. Read a whole file b
 - Private/protected fields `_camelCase`, **always explicitly initialized**, even to the default (`= null`, `= 0`, `= false`, `= new()`).
 - Lazy cached backing fields take an `_x_internal` suffix and are read only through their property: `public CanvasGroup CanvasGroup => (_canvasGroup_internal = GetComponentIfNull(_canvasGroup_internal));`. In an `EditorWindow` or other serialized Editor class, mark these caches `[NonSerialized]`, or a domain reload brings them back as empty non-null instances.
 - Read own members through `this.` (`this.CanvasGroup`, `this.transform`) and base members through `base.` (`base.transform`, `base.serializedObject`).
-- Type prefixes: `A` abstract (`AEventChannelSO`), `E` enum (`ELogLevel`), `S` serializable struct (`SBuildConfiguration`), `I` interface.
+- Type prefixes: `A` abstract (`AEventChannelSO`), `E` enum (`ELogLevel`), `I` interface. **Structs take no prefix**, serializable or not. Older `S`-prefixed structs (`SBuildConfiguration`) are legacy: renaming one is a breaking change, so do it only when asked.
 - **Explicit types, never `var`.**
 - `[SerializeField] private T _field = null;` on one line; extra attributes stack on the same line. `[ContextMenu(nameof(Method))]` for methods worth invoking from the Inspector.
 - English everywhere.
