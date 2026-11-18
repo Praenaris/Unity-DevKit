@@ -1,3 +1,4 @@
+using DragonResonance.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,23 +12,74 @@ namespace DragonResonance.Databases
 		#region Publics
 
 			public void ImportTSV(string content, string separator = "\t", string delimiter = "\"") => ImportCSV(content, separator, delimiter);
-			public void ImportCSV(string content, string separator = ";", string delimiter = "\"")
+			public void ImportCSV(string content, string separator = ";", string delimiter = "\"")	// Replaces the whole content
 			{
 				Clear();
-				JoinCSV(content, separator, delimiter);
+				InsertRows(0, ParseRows(content, separator, delimiter));
 			}
 
-			public void JoinTSV(string content, string separator = "\t", string delimiter = "\"") => JoinCSV(content, separator, delimiter);
-			public void JoinCSV(string content, string separator = ";", string delimiter = "\"")
+			public void AppendRowsTSV(string content, string separator = "\t", string delimiter = "\"") => AppendRowsCSV(content, separator, delimiter);
+			public void AppendRowsCSV(string content, string separator = ";", string delimiter = "\"") =>	// After the existing rows, into the existing columns
+				AppendRows(ParseRows(content, separator, delimiter));
+
+			public void PrependRowsTSV(string content, string separator = "\t", string delimiter = "\"") => PrependRowsCSV(content, separator, delimiter);
+			public void PrependRowsCSV(string content, string separator = ";", string delimiter = "\"") =>	// Before the existing rows, into the existing columns
+				PrependRows(ParseRows(content, separator, delimiter));
+
+			public void AppendColumnsTSV(string content, string separator = "\t", string delimiter = "\"") => AppendColumnsCSV(content, separator, delimiter);
+			public void AppendColumnsCSV(string content, string separator = ";", string delimiter = "\"") =>	// After the existing columns, into the existing rows
+				ExecuteTransposed(() => AppendRows(Transpose(ParseRows(content, separator, delimiter))));
+
+			public void PrependColumnsTSV(string content, string separator = "\t", string delimiter = "\"") => PrependColumnsCSV(content, separator, delimiter);
+			public void PrependColumnsCSV(string content, string separator = ";", string delimiter = "\"") =>	// Before the existing columns, into the existing rows
+				ExecuteTransposed(() => PrependRows(Transpose(ParseRows(content, separator, delimiter))));
+
+		#endregion
+
+
+		#region Inheritables
+
+			protected virtual void AppendRows(List<List<T>> rows) => InsertRows(_data.Count, FitToColumns(rows));
+			protected virtual void PrependRows(List<List<T>> rows) => InsertRows(0, FitToColumns(rows));
+
+
+			protected void InsertRows(int rowIndex, IEnumerable<List<T>> rows)
 			{
-				foreach (List<string> row in ParseCSV(content, separator, delimiter))
-					AddRow(row.Cast<T>());
+				_data.InsertRange(rowIndex, rows);
+				NormalizeDataMatrix();
 			}
+
+			protected List<List<T>> ParseRows(string content, string separator, string delimiter) =>
+				ParseCSV(content, separator, delimiter).Select(row => row.Cast<T>().ToList()).ToList();
 
 		#endregion
 
 
 		#region Privates
+
+			private List<List<T>> FitToColumns(List<List<T>> rows)
+			{
+				if (_data.IsEmpty()) return rows;
+
+				int columnCount = this.ColumnCount;
+				return rows.Select(row => row.Take(columnCount).ToList()).ToList();
+			}
+
+			private void ExecuteTransposed(Action rowsOperation)
+			{
+				_data = Transpose(_data);
+				rowsOperation();
+				_data = Transpose(_data);
+			}
+
+			private static List<List<T>> Transpose(List<List<T>> rows)
+			{
+				int columnCount = (rows.IsEmpty() ? 0 : rows.Max(row => row.Count));
+				return Enumerable.Range(0, columnCount)
+					.Select(columnIndex => rows.Select(row => ((columnIndex < row.Count) ? row[columnIndex] : default)).ToList())
+					.ToList();
+			}
+
 
 			public IEnumerable<List<string>> ParseCSV(string content, string separator, string delimiter)
 			{
@@ -64,7 +116,7 @@ namespace DragonResonance.Databases
 						}
 					}
 
-					row.Add(current.ToString());	// Add the last cell's content
+					row.Add(current.ToString());	// Last cell
 					yield return row;
 				}
 			}
@@ -74,19 +126,15 @@ namespace DragonResonance.Databases
 }
 
 
-/*       ________________________________________________________________       */
-/*           _________   _______ ________  _______  _______  ___    _           */
-/*           |        \ |______/ |______| |  _____ |       | |  \   |           */
-/*           |________/ |     \_ |      | |______| |_______| |   \__|           */
-/*           ______ _____ _____ _____ __   _ _____ __   _ _____ _____           */
-/*           |____/ |____ [___  |   | | \  | |___| | \  | |     |____           */
-/*           |    \ |____ ____] |___| |  \_| |   | |  \_| |____ |____           */
-/*       ________________________________________________________________       */
-/*                                                                              */
-/*           David Tabernero M.  <https://github.com/davidtabernerom>           */
-/*           Dragon Resonance    <https://github.com/dragonresonance>           */
-/*                  Copyright © 2021-2026. All rights reserved.                 */
-/*                Licensed under the Apache License, Version 2.0.               */
-/*                         See LICENSE.md for more info.                        */
-/*       ________________________________________________________________       */
-/*                                                                              */
+/*                                                                                                                */
+/*       `7MM"""Mq.`7MM"""Mq.       db     `7MM"""YMM  `7MN.   `7MF'     db     `7MM"""Mq. `7MMF' .M"""bgd        */
+/*         MM   `MM. MM   `MM.     ;MM:      MM    `7    MMN.    M      ;MM:      MM   `MM.  MM  ,MI    "Y        */
+/*         MM   ,M9  MM   ,M9     ,V^MM.     MM   d      M YMb   M     ,V^MM.     MM   ,M9   MM  `MMb.            */
+/*         MMmmdM9   MMmmdM9     ,M  `MM     MMmmMM      M  `MN. M    ,M  `MM     MMmmdM9    MM    `YMMNq.        */
+/*         MM        MM  YM.     AbmmmqMA    MM   Y  ,   M   `MM.M    AbmmmqMA    MM  YM.    MM  .     `MM        */
+/*         MM        MM   `Mb.  A'     VML   MM     ,M   M     YMM   A'     VML   MM   `Mb.  MM  Mb     dM        */
+/*       .JMML.    .JMML. .JMM.AMA.   .AMMA.JMMmmmmMMM .JML.    YM .AMA.   .AMMA.JMML. .JMM.JMML.P"Ybmmd"         */
+/*                                                                                                                */
+/*                 Licensed under the Apache License, Version 2.0.  See LICENSE.md for more info.                 */
+/*                                     Copyright © 2026. All rights reserved.                                     */
+/*                                                                                                                */
