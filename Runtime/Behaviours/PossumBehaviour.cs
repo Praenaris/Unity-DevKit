@@ -15,6 +15,10 @@ namespace DragonResonance.Behaviours
 			public void DestroyOwnGameobject() => DestroyGameobject(base.gameObject);
 			public void DestroyGameobject(GameObject gameObject) => DestroyDynamically(gameObject);
 
+			public void DestroyChildren() => DestroyChildren(base.transform);
+			public void DestroyChildren(IEnumerable<GameObject> preservedChildren) => DestroyChildren(base.transform, preservedChildren);
+			public void DestroyChildren(IEnumerable<Transform> preservedChildren) => DestroyChildren(base.transform, preservedChildren);
+
 		#endregion
 
 
@@ -33,10 +37,6 @@ namespace DragonResonance.Behaviours
 				FindComponentIfNull(statement, (includeInactive ? FindObjectsInactive.Include : FindObjectsInactive.Exclude));
 			protected T FindComponentIfNull<T>(T statement, FindObjectsInactive includeInactive) where T : Component =>
 				((statement == null) ? FindAnyObjectByType<T>(includeInactive) : statement);
-
-			protected void DestroyChildren() => DestroyChildren(this.transform);
-			protected void DestroyChildren(IEnumerable<GameObject> preservedChildren) => DestroyChildren(this.transform, preservedChildren);
-			protected void DestroyChildren(IEnumerable<Transform> preservedChildren) => DestroyChildren(this.transform, preservedChildren);
 
 		#endregion
 
