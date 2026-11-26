@@ -32,7 +32,15 @@ namespace DragonResonance.GUI
 
 		#region Events
 
-			private void Start() { if (_playOnStart) Play(); }
+			private void Start()
+			{
+				if (!_playOnStart) return;
+
+				if (_loop)
+					PlayLoop();
+				else
+					PlayOnce();
+			}
 			private void OnEnable() => ResetIndex();
 			private void OnValidate() => ResetIndex();
 			private void Update() => RefreshSprite();
