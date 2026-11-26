@@ -1,6 +1,7 @@
 using DragonResonance.Behaviours;
 using DragonResonance.Extensions;
 using System.Collections.Generic;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ namespace DragonResonance.GUI
 	public class SpriteSequencePlayer : PossumBehaviour
 	{
 		[Header("Configuration")]
+		[SerializeField] private bool _playOnStart = false;
 		[SerializeField] private bool _playing = true;
 		[SerializeField] private bool _loop = true;
 		[SerializeField] private float _speed = 4f;
@@ -21,6 +23,8 @@ namespace DragonResonance.GUI
 		[SerializeField] private Image[] _images = { };
 		[SerializeField] private SpriteRenderer[] _spriteRenderers = { };
 
+		public UnityEvent OnSequenceEnd = null;
+
 
 		private float _timeOffset = 0f;
 		private int _shownSpriteIndex = -1;
@@ -28,6 +32,7 @@ namespace DragonResonance.GUI
 
 		#region Events
 
+			private void Start() { if (_playOnStart) Play(); }
 			private void OnEnable() => ResetIndex();
 			private void OnValidate() => ResetIndex();
 			private void Update() => RefreshSprite();
@@ -83,8 +88,11 @@ namespace DragonResonance.GUI
 					_shownSpriteIndex = spriteIndex;
 				}
 
-				if (!_loop && (spriteIndex == _sprites.LastIndex()))
-					Stop();
+				if (spriteIndex == _sprites.LastIndex()) {
+					if (!_loop)
+						Stop();
+					OnSequenceEnd?.Invoke();
+				}
 			}
 
 
