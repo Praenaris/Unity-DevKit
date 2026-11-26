@@ -9,6 +9,15 @@ namespace DragonResonance.Behaviours
 {
 	public abstract partial class PossumBehaviour : MonoBehaviour
 	{
+		#region Publics
+
+			public void DestroySelf() => Destroy(this);
+			public void DestroyOwnGameobject() => DestroyGameobject(base.gameObject);
+			public void DestroyGameobject(GameObject gameObject) => DestroyDynamically(gameObject);
+
+		#endregion
+
+
 		#region Privates
 
 			protected T GetComponentIfNull<T>(T statement) where T : Component =>
